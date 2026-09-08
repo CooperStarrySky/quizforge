@@ -33,8 +33,8 @@
   --accent-base:#1f6db5;
 
   /* ── LIGHT (Examplify default) ── */
-  --paper:#eef1f4; --surface:#ffffff;
-  --ink:#1e2430; --ink-2:#5a6472; --ink-3:#8f98a5;
+  --paper:#f6f7f9; --surface:#ffffff;
+  --ink:#202733; --ink-2:#586273; --ink-3:#687487;
   --line:#dde2e8; --line-strong:#c3cad3;
   --spine:#1c2e4a;
   --correct:#2e7d4f; --correct-bg:#e9f4ee;
@@ -59,7 +59,7 @@
 /* ── DARK THEME ── */
 :root[data-theme="dark"]{
   --paper:#14161b; --surface:#1c1f26;
-  --ink:#e6e9ef; --ink-2:#9aa3b1; --ink-3:#6a727f;
+  --ink:#e6e9ef; --ink-2:#abb4c2; --ink-3:#9aa5b5;
   --line:#2a2e37; --line-strong:#3a3f4a;
   --spine:#0f1115;
   --correct:#5cc298; --correct-bg:#15271f;
@@ -79,7 +79,7 @@ body,.topbar,.card,.lec,.dropdown-menu,.step,.prompt-box,.paste-area{
   transition:background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
 body{
   font-family:var(--font-ui);background:var(--paper);color:var(--ink);
-  min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.55;
+  min-height:100dvh;-webkit-font-smoothing:antialiased;line-height:1.55;
 }
 svg{display:block}
 a{color:inherit;text-decoration:none}
@@ -87,31 +87,25 @@ a{color:inherit;text-decoration:none}
 button:active,.take:active{transform:translateY(1px)}
 
 /* ══ TOPBAR KEYLINE + TEXT SELECTION ══ */
-.topbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
-  background:linear-gradient(90deg,var(--accent),transparent 62%);pointer-events:none}
+
 ::selection{background:color-mix(in srgb, var(--accent) 24%, transparent)}
 
 /* ══ TOP BAR (matches player topbar) ══ */
 .topbar{
-  background:var(--spine);color:#fff;height:54px;position:sticky;top:0;z-index:30;
-  display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+  background:var(--surface);color:var(--ink);min-height:68px;position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px max(24px,calc((100vw - 1120px)/2));
   border-bottom:1px solid var(--line);
 }
 .brand{display:flex;align-items:center;gap:14px;min-width:0}
-.brand-mark{font-size:.98rem;font-weight:600;letter-spacing:-.01em;color:#fff;white-space:nowrap}
-.brand-sep{width:1px;height:18px;background:rgba(255,255,255,.22)}
-.topbar-title{
-  font-family:var(--font-read);font-size:.92rem;color:rgba(255,255,255,.66);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
+.brand-mark{font-size:1.15rem;font-weight:750;letter-spacing:-.045em;color:var(--ink);white-space:nowrap}
 .topbar-right{display:flex;align-items:center;gap:6px}
 .tb-btn{
-  background:transparent;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.9);
+  background:transparent;border:1px solid var(--line);color:var(--ink-2);
   font-family:var(--font-ui);font-size:.8rem;font-weight:500;white-space:nowrap;
   padding:7px 13px;border-radius:6px;cursor:pointer;
   display:flex;align-items:center;gap:7px;transition:background .14s var(--ease),border-color .14s var(--ease);
 }
-.tb-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28)}
+.tb-btn:hover{background:var(--paper);border-color:var(--line-strong)}
 .tb-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;opacity:.85}
 
 /* ══ SETTINGS DROPDOWN ══ */
@@ -150,7 +144,12 @@ button:active,.take:active{transform:translateY(1px)}
 .size-slider:focus-visible{box-shadow:var(--ring)}
 
 /* ══ PAGE ══ */
-.wrap{max-width:1440px;margin:0 auto;padding:0 30px 80px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 64px}
+[hidden]{display:none!important}
+.view-nav{display:flex;gap:4px;margin-right:auto}
+.view-nav a{padding:8px 14px;border-radius:7px;color:var(--ink-2);font-size:.85rem;font-weight:600}
+.view-nav a:hover{background:var(--paper);color:var(--ink)}
+.view-nav a[aria-current="page"]{background:var(--accent-tint);color:var(--accent)}
 
 /* question-count slider */
 .qcount-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
@@ -277,27 +276,26 @@ button:active,.take:active{transform:translateY(1px)}
   font-size:.78rem;color:var(--ink-3);
 }
 
-/* ════════════════════════════════════════
-   TWO-COLUMN WORKBENCH LAYOUT
-   ════════════════════════════════════════ */
-.two-col-layout{
-  display:grid;
-  grid-template-columns:1fr 330px;
-  gap:28px;
-  align-items:start;
-  padding-top:36px;
-}
+/* Library and creation share one page and the existing import logic. */
+.home-layout{padding-top:44px}
 
 /* ── Library column ── */
-.lib-col-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.lib-title{font-size:1.5rem;font-weight:600;letter-spacing:-.015em;line-height:1.15;color:var(--ink)}
-.lib-sub{font-size:.87rem;color:var(--ink-2);margin-top:3px}
-.lib-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:14px}
+.lib-col-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px}
+.lib-title{font-size:2rem;font-weight:700;letter-spacing:-.045em;line-height:1.2;color:var(--ink)}
+.lib-sub{font-size:.9rem;color:var(--ink-2);margin-top:8px;max-width:60ch}
+.lib-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
 
 /* ── Folder sections ── */
-.folder-section{margin-bottom:24px}
-.folder-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative}
-.folder-chevron{background:none;border:none;cursor:pointer;padding:4px;border-radius:5px;
+.folder-section{margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
+.folder-hdr{display:flex;align-items:center;gap:12px;min-height:56px;position:relative}
+summary.folder-hdr{cursor:pointer;list-style:none}
+summary.folder-hdr::-webkit-details-marker{display:none}
+summary.folder-hdr:hover .folder-name{color:var(--accent)}
+.folder-section[open] > .folder-hdr .folder-chevron svg{transform:rotate(90deg)}
+.folder-section > .folder-grid-wrap{padding:0 4px 14px}
+.folder-section .folder-section{margin:0 0 8px 20px;border-radius:6px;background:var(--paper)}
+.folder-section .folder-section .folder-hdr{min-height:48px}
+.folder-chevron{background:none;border:none;cursor:pointer;padding:10px;border-radius:5px;
   display:flex;align-items:center;color:var(--ink-2);transition:color .12s}
 .folder-chevron:hover{color:var(--ink)}
 .folder-chevron svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;
@@ -306,7 +304,7 @@ button:active,.take:active{transform:translateY(1px)}
 .folder-name{font-size:.94rem;font-weight:600;color:var(--ink);flex:1;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .folder-count{font-family:var(--font-mono);font-size:.72rem;font-weight:600;
-  background:var(--line);color:var(--ink-2);border-radius:10px;padding:1px 7px}
+  color:var(--ink-2);padding:1px 7px;white-space:nowrap}
 .folder-menu-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:5px;
   color:var(--ink-3);font-size:.75rem;display:flex;align-items:center;gap:3px;transition:color .12s,background .12s}
 .folder-menu-btn:hover{color:var(--ink);background:var(--line)}
@@ -323,25 +321,19 @@ button:active,.take:active{transform:translateY(1px)}
   border-radius:6px;cursor:default;transition:background .14s,color .14s}
 .unfiled-hdr.drag-over-folder{background:var(--accent-tint);color:var(--accent);border-bottom-color:var(--accent)}
 
-/* ── Right create rail ── */
-.create-rail{position:sticky;top:62px}
-.create-rail-inner{
-  background:var(--surface);border:1px solid var(--line);border-radius:10px;
-  padding:18px 17px;
-}
-.rail-title{font-size:1rem;font-weight:650;letter-spacing:-.01em;color:var(--ink);margin-bottom:14px}
-.rail-steps{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--paper);margin-bottom:16px}
-.rail-step{display:flex;align-items:baseline;gap:9px;padding:9px 12px;font-size:.81rem;color:var(--ink-2);line-height:1.45}
-.rail-step+.rail-step{border-top:1px solid var(--line)}
-.rail-n{font-family:var(--font-mono);font-size:1rem;color:var(--ink-3);flex-shrink:0;line-height:1;font-weight:600}
-.rail-section{margin-top:15px}
-.rail-label{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:8px}
-.rail-prompt-hdr{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap}
-.btn-sm{font-size:.80rem;padding:7px 12px}
-.prompt-disclosure{overflow:hidden;max-height:0;transition:max-height .32s var(--ease)}
-.prompt-disclosure.open{max-height:360px}
-.rail-divider{height:1px;background:var(--line);margin:15px 0}
-
+/* Creation is a focused view; the underlying prompt and parser are unchanged. */
+.create-view{max-width:720px;margin:0 auto}
+.create-head{margin-bottom:28px}
+.create-step{display:grid;grid-template-columns:32px minmax(0,1fr);gap:18px;padding:26px 0;border-top:1px solid var(--line)}
+.step-number{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line-strong);border-radius:50%;font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2)}
+.create-step h2{font-size:1.05rem;font-weight:650;letter-spacing:-.02em;margin-bottom:6px}
+.create-step p{font-size:.88rem;color:var(--ink-2);margin-bottom:18px;max-width:58ch}
+.rail-label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-2);margin-bottom:10px}
+.rail-prompt-hdr{display:flex;align-items:center;gap:8px;margin:16px 0 10px;flex-wrap:wrap}
+.btn-sm{font-size:.80rem;padding:8px 12px}
+.prompt-disclosure{overflow:hidden;max-height:0;visibility:hidden;transition:max-height .25s var(--ease)}
+.prompt-disclosure.open{max-height:360px;visibility:visible}
+.create-note{font-size:.8rem;color:var(--ink-2);margin-top:14px}
 /* ── Grip handle for DnD ── */
 /* The grip is a <button>, so the user-agent border/background must be reset
    explicitly - the dots sit directly on the card surface. */
@@ -374,19 +366,20 @@ button:active,.take:active{transform:translateY(1px)}
 .modal-input:focus{border-color:var(--accent);box-shadow:var(--ring)}
 
 @media(max-width:900px){
-  .two-col-layout{display:block}
-  .create-rail{position:static;margin-top:30px}
   .wrap{padding:0 18px 40px}
   .footer{margin-top:44px;padding:18px 18px 26px}
   .lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:720px){
-  .topbar{padding:0 14px}
-  .topbar-title{display:none}
+  .topbar{padding:12px 16px;gap:10px;flex-wrap:wrap}
+  .view-nav{order:3;width:100%;border-top:1px solid var(--line);padding-top:10px}
+  .topbar-right{margin-left:auto}
+  .home-layout{padding-top:28px}
   .lib-grid{grid-template-columns:1fr}
-}
-@media(max-width:1200px){
-  .lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lib-title{font-size:1.75rem}
+  .folder-section .folder-section{margin-left:4px}
+  .folder-hdr{gap:6px}
+  .create-step{gap:12px}
 }
 @media(prefers-reduced-motion:reduce){
   *{transition:none !important;animation:none !important}
@@ -406,11 +399,6 @@ button:active,.take:active{transform:translateY(1px)}
   display:none;line-height:1.45;
 }
 .shipped-banner.visible{display:block}
-.custom-heading{
-  font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--ink-3);margin:20px 0 10px;padding:4px 6px 6px;
-  border-bottom:1px solid var(--line);display:none;
-}
 </style>
 </head>
 <body>
@@ -419,9 +407,12 @@ button:active,.take:active{transform:translateY(1px)}
 <div class="topbar">
   <div class="brand">
     <span class="brand-mark">QuizForge</span>
-    <span class="brand-sep"></span>
-    <span class="topbar-title">Make-your-own quiz studio</span>
+
   </div>
+  <nav class="view-nav" aria-label="Main navigation">
+    <a href="#library" id="nav-library" aria-current="page">Library</a>
+    <a href="#create" id="nav-create">Create a quiz</a>
+  </nav>
   <div class="topbar-right">
     <button class="tb-btn" id="lock-btn" style="display:none" onclick="lockSite()" aria-label="Lock protected quizzes">
       <svg viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg>
@@ -465,15 +456,15 @@ button:active,.take:active{transform:translateY(1px)}
   </div>
 </div>
 
-<div class="wrap">
-  <div class="two-col-layout">
+<main class="wrap">
+  <div class="home-layout">
 
-    <!-- LEFT: Library -->
+    <!-- Library -->
     <div class="lib-col" id="lib-col">
       <div class="lib-col-head" id="lib-col-head">
         <div>
-          <h1 class="lib-title">Your quizzes</h1>
-          <div class="lib-sub">Saved in this browser. Scores build with every attempt.</div>
+          <h1 class="lib-title" tabindex="-1">Your library</h1>
+          <div class="lib-sub">Pick a quiz. Make a little progress.</div>
         </div>
         <button class="mini-btn" id="new-folder-btn" onclick="openNewFolderModal()">+ New folder</button>
       </div>
@@ -481,64 +472,69 @@ button:active,.take:active{transform:translateY(1px)}
       <div class="shipped-banner" id="shipped-banner"></div>
       <!-- shipped quiz sections rendered here by loadManifest() -->
       <div id="shipped-root"></div>
-      <!-- Custom heading shown only when shipped sections are also present -->
-      <div class="custom-heading" id="custom-heading">Custom</div>
-      <!-- folder sections + unfiled grid rendered here by JS -->
-      <div id="library-root"></div>
-      <div class="empty" id="library-empty" style="display:none">
-        No quizzes yet. Use the panel on the right to create your first one.
-      </div>
+      <details class="folder-section" id="custom-section">
+        <summary class="folder-hdr">
+          <span class="folder-chevron" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg></span>
+          <span class="folder-name">Custom quizzes</span>
+          <span class="folder-count" id="custom-count"></span>
+        </summary>
+        <div class="folder-grid-wrap">
+          <div id="library-root"></div>
+          <div class="empty" id="library-empty" style="display:none">
+            Your custom quizzes will appear here. <a href="#create">Create your first quiz →</a>
+          </div>
+        </div>
+      </details>
     </div>
 
-    <!-- RIGHT: Create rail -->
-    <div class="create-rail" id="create-rail">
-      <div class="create-rail-inner">
-        <div class="rail-title">Create a quiz</div>
-
-        <div class="rail-steps">
-          <div class="rail-step"><span class="rail-n">1</span>Set the question count, then copy the prompt</div>
-          <div class="rail-step"><span class="rail-n">2</span>Paste it into your AI chatbot with your lecture notes</div>
-          <div class="rail-step"><span class="rail-n">3</span>Paste the JSON it returns here and press Load</div>
-        </div>
-
-        <div class="rail-section">
-          <div class="rail-label">Number of questions</div>
+    <section class="create-view" id="create-rail" hidden aria-labelledby="create-title">
+      <div class="create-head">
+        <h1 class="lib-title" id="create-title" tabindex="-1">Create a quiz</h1>
+        <p class="lib-sub">Use your notes and your AI chatbot. Bring the result back here to study.</p>
+      </div>
+      <section class="create-step">
+        <span class="step-number" aria-hidden="true">1</span>
+        <div>
+          <h2>Copy your quiz prompt</h2>
+          <p>Choose how many questions you want. The prompt tells your chatbot how to format a quiz for QuizForge.</p>
+          <label class="rail-label" for="qcount-slider">Number of questions</label>
           <div class="qcount-row">
-            <input type="range" class="size-slider qcount-slider" id="qcount-slider" min="5" max="40" step="1" value="10" aria-label="Number of questions">
+            <input type="range" class="size-slider qcount-slider" id="qcount-slider" min="5" max="40" step="1" value="10">
             <span class="qcount-readout"><b id="qcount-num">10</b> questions</span>
           </div>
-        </div>
-
-        <div class="rail-section">
-          <div class="rail-label">Prompt</div>
           <div class="rail-prompt-hdr">
-            <button class="btn btn-primary btn-sm" id="copy-btn" onclick="copyPrompt()">Copy prompt</button>
-            <button class="btn btn-ghost btn-sm" id="show-prompt-btn" onclick="togglePromptDisclosure()">Show prompt</button>
+            <button class="btn btn-primary" id="copy-btn" onclick="copyPrompt()">Copy prompt</button>
+            <button class="btn btn-ghost btn-sm" id="show-prompt-btn" onclick="togglePromptDisclosure()" aria-expanded="false" aria-controls="prompt-disclosure">Show prompt</button>
           </div>
           <div class="prompt-disclosure" id="prompt-disclosure">
-            <div class="prompt-wrap">
-              <div class="prompt-box" id="prompt-box" tabindex="0" aria-label="Quiz prompt text"></div>
-            </div>
+            <div class="prompt-wrap"><div class="prompt-box" id="prompt-box" tabindex="0" aria-label="Quiz prompt text"></div></div>
           </div>
         </div>
-
-        <div class="rail-divider"></div>
-
-        <div class="rail-section" style="margin-top:0">
-          <div class="rail-label">Paste quiz JSON</div>
-          <textarea class="paste-area" id="paste-area" spellcheck="false"
-            placeholder="Paste the AI's JSON output here..." aria-label="Paste quiz JSON" style="min-height:110px"></textarea>
+      </section>
+      <section class="create-step">
+        <span class="step-number" aria-hidden="true">2</span>
+        <div>
+          <h2>Use it in your AI chatbot</h2>
+          <p>Open the chatbot you normally use. Paste the prompt, attach your lecture notes or slides, and send. Wait for the quiz, then copy its full response.</p>
+        </div>
+      </section>
+      <section class="create-step">
+        <span class="step-number" aria-hidden="true">3</span>
+        <div>
+          <h2>Bring your quiz back</h2>
+          <p>Paste the response below, including the quiz code block. Already have a QuizForge quiz? You can paste it here directly.</p>
+          <label class="rail-label" for="paste-area">Your chatbot’s response</label>
+          <textarea class="paste-area" id="paste-area" spellcheck="false" placeholder="Paste the full quiz response here…"></textarea>
           <div class="paste-actions">
-            <button class="btn btn-primary btn-sm" onclick="loadQuiz()">Load quiz</button>
+            <button class="btn btn-primary" onclick="loadQuiz()">Add to library</button>
             <span class="status" id="load-status" role="status" aria-live="polite"></span>
           </div>
+          <div class="create-note">Custom quizzes and scores are saved in this browser.</div>
         </div>
-
-      </div>
-    </div>
-
+      </section>
+    </section>
   </div>
-</div>
+</main>
 
 <footer class="footer">QuizForge &middot; quizzes and scores are stored only in this browser</footer>
 
@@ -735,6 +731,7 @@ function getScores(){ try{ const a = JSON.parse(store.get(SCORES_KEY, '[]')); re
 function setScores(a){ store.set(SCORES_KEY, JSON.stringify(a)); }
 /* ── Folder storage ── */
 const FOLDERS_KEY = 'qf_folders';
+const expandedFolders = new Set();
 /* Folders are read defensively: a half-written or hand-edited value must never
    take the library down with it, so every entry is checked and normalized. */
 function getFolders(){
@@ -745,7 +742,7 @@ function getFolders(){
             .map(f => ({
               id: f.id,
               name: (typeof f.name === 'string' && f.name.trim()) ? f.name : 'Untitled folder',
-              collapsed: !!f.collapsed
+              collapsed: !expandedFolders.has(f.id)
             }));
   }catch(e){ return []; }
 }
@@ -958,8 +955,11 @@ function loadQuiz(){
   setQuizzes(quizzes);
 
   const n = rec.questions.length;
-  setStatus('Loaded “' + dash(title) + '” - ' + n + ' question' + (n === 1 ? '' : 's') + '. It is in your library below.', 'ok');
+  setStatus('Loaded “' + dash(title) + '” - ' + n + ' question' + (n === 1 ? '' : 's') + '. It is in your library.', 'ok');
   document.getElementById('paste-area').value = '';
+  location.hash = 'library';
+  showHomeView();
+  document.getElementById('custom-section').open = true;
   renderLibrary(rec.id);
 }
 
@@ -1056,9 +1056,10 @@ function renderLibrary(flashId, quiet){
   const quizzes = getQuizzes();  /* use stored order; no re-sort */
   const scores = getScores();
   const folders = getFolders();
+  document.getElementById('custom-count').textContent = quizzes.length + (quizzes.length === 1 ? ' quiz' : ' quizzes');
 
   root.innerHTML = '';
-  if(quizzes.length === 0){
+  if(quizzes.length === 0 && folders.length === 0){
     if(emptyEl) emptyEl.style.display = 'block';
     return;
   }
@@ -1082,7 +1083,7 @@ function renderLibrary(flashId, quiet){
       hdr.className = 'folder-hdr';
       hdr.dataset.folderId = folder.id;
       hdr.innerHTML =
-        '<button class="folder-chevron' + (folder.collapsed ? '' : ' open') + '" aria-label="' + (folder.collapsed ? 'Expand' : 'Collapse') + ' folder" data-folder-id="' + esc(folder.id) + '">' +
+        '<button class="folder-chevron' + (folder.collapsed ? '' : ' open') + '" aria-label="' + (folder.collapsed ? 'Expand' : 'Collapse') + ' folder" aria-expanded="' + !folder.collapsed + '" data-folder-id="' + esc(folder.id) + '">' +
           '<svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg>' +
         '</button>' +
         '<span class="folder-name">' + esc(folder.name) + '</span>' +
@@ -1097,10 +1098,12 @@ function renderLibrary(flashId, quiet){
 
       /* Chevron toggle */
       hdr.querySelector('.folder-chevron').addEventListener('click', () => {
-        const folders2 = getFolders();
-        const fi = folders2.findIndex(f => f.id === folder.id);
-        if(fi !== -1){ folders2[fi].collapsed = !folders2[fi].collapsed; setFolders(folders2); }
+        if(expandedFolders.has(folder.id)) expandedFolders.delete(folder.id);
+        else expandedFolders.add(folder.id);
         renderLibrary();
+        root.querySelectorAll(".folder-chevron").forEach(btn => {
+          if(btn.dataset.folderId === folder.id) btn.focus();
+        });
       });
 
       /* DnD drop on folder header */
@@ -1191,7 +1194,10 @@ function togglePromptDisclosure(){
   const btn  = document.getElementById('show-prompt-btn');
   if(!disc) return;
   const isOpen = disc.classList.toggle('open');
-  if(btn) btn.textContent = isOpen ? 'Hide prompt' : 'Show prompt';
+  if(btn){
+    btn.textContent = isOpen ? 'Hide prompt' : 'Show prompt';
+    btn.setAttribute('aria-expanded', String(isOpen));
+  }
 }
 
 /* ── Drag-and-drop state ── */
@@ -1355,13 +1361,14 @@ function saveFolderModal(){
   if(!name){ showFolderModalErr('Folder name cannot be empty.'); return; }
   const folders = getFolders();
   if(folderModalMode === 'new'){
-    folders.push({ id: newFolderId(), name: name, collapsed: false });
+    folders.push({ id: newFolderId(), name: name, collapsed: true });
     setFolders(folders);
   } else {
     const idx = folders.findIndex(f => f.id === folderModalId);
     if(idx !== -1){ folders[idx].name = name; setFolders(folders); }
   }
   closeFolderModal();
+  document.getElementById("custom-section").open = true;
   renderLibrary();
 }
 
@@ -1660,71 +1667,72 @@ function buildShippedCard(entry, allAttempts) {
   return card;
 }
 
-/* Render manifest sections into #shipped-root. */
-function renderShippedSections(sections) {
-  const root = document.getElementById('shipped-root');
-  const customHdr = document.getElementById('custom-heading');
-  if(!root) return;
-  root.innerHTML = '';
-
-  const allAttempts = getShippedAttempts();
-  let hadContent = false;
-
+/* Keep the encrypted manifest flat. Its stable quiz IDs supply the Block. */
+function groupProtectedSections(sections){
+  const blocks = new Map();
   sections.forEach(sec => {
-    if(!sec || !sec.id || !Array.isArray(sec.quizzes) || !sec.quizzes.length) return;
-
-    const secEl = document.createElement('div');
-    secEl.className = 'folder-section';
-
-    /* Collapsible section header (reuses existing folder-hdr CSS) */
-    let collapsed = false;
-
-    const chevBtn = document.createElement('button');
-    chevBtn.className = 'folder-chevron open';
-    chevBtn.setAttribute('aria-label', 'Collapse section');
-    chevBtn.innerHTML = '<svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg>';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'folder-name';
-    nameSpan.textContent = sec.name || sec.id; /* textContent - safe */
-
-    const countSpan = document.createElement('span');
-    countSpan.className = 'folder-count';
-    countSpan.textContent = sec.quizzes.length;
-
-    const hdr = document.createElement('div');
-    hdr.className = 'folder-hdr';
-    hdr.appendChild(chevBtn);
-    hdr.appendChild(nameSpan);
-    hdr.appendChild(countSpan);
-
-    const gridWrap = document.createElement('div');
-    gridWrap.className = 'folder-grid-wrap';
-
-    const grid = document.createElement('div');
-    grid.className = 'lib-grid';
-
+    if(!sec || !Array.isArray(sec.quizzes)) return;
     sec.quizzes.forEach(entry => {
       if(!entry || !entry.id || !entry.file) return;
-      grid.appendChild(buildShippedCard(entry, allAttempts));
+      const match = String(entry.id).match(/^(.+)-w\d{2}-/i);
+      const id = match ? match[1].toLowerCase() : 'other';
+      if(!blocks.has(id)) blocks.set(id, {
+        id: 'block-' + id,
+        name: id === 'cardio' ? 'Cardiovascular' : id === 'other' ? 'Other quizzes' : id.replace(/-/g, ' ').toUpperCase(),
+        sections: []
+      });
+      const block = blocks.get(id);
+      let week = block.sections.find(w => w.id === sec.id);
+      if(!week){ week = { id: sec.id, name: sec.name, quizzes: [] }; block.sections.push(week); }
+      week.quizzes.push(entry);
     });
-
-    gridWrap.appendChild(grid);
-
-    chevBtn.addEventListener('click', () => {
-      collapsed = !collapsed;
-      chevBtn.classList.toggle('open', !collapsed);
-      chevBtn.setAttribute('aria-label', collapsed ? 'Expand section' : 'Collapse section');
-      gridWrap.classList.toggle('collapsed', collapsed);
-    });
-
-    secEl.appendChild(hdr);
-    secEl.appendChild(gridWrap);
-    root.appendChild(secEl);
-    hadContent = true;
   });
+  blocks.forEach(block => block.sections.sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true })));
+  return Array.from(blocks.values());
+}
 
-  if(hadContent && customHdr) customHdr.style.display = 'block';
+/* Native details provide keyboard support and start collapsed on every load. */
+function renderShippedSections(sections){
+  const root = document.getElementById('shipped-root');
+  if(!root) return;
+  root.innerHTML = '';
+  const attempts = getShippedAttempts();
+  function buildSection(sec){
+    if(!sec || !sec.id) return null;
+    const quizzes = (sec.sections ? sec.sections.flatMap(w => w.quizzes || []) : sec.quizzes || [])
+      .filter(q => q && q.id && q.file);
+    if(!quizzes.length) return null;
+    const folder = document.createElement('details');
+    folder.className = 'folder-section';
+    folder.dataset.sectionId = sec.id;
+    const header = document.createElement('summary');
+    header.className = 'folder-hdr';
+    const chevron = document.createElement('span');
+    chevron.className = 'folder-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.innerHTML = '<svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg>';
+    const name = document.createElement('span');
+    name.className = 'folder-name';
+    name.textContent = sec.name || sec.id;
+    const count = document.createElement('span');
+    count.className = 'folder-count';
+    count.textContent = quizzes.length + (quizzes.length === 1 ? ' quiz' : ' quizzes');
+    header.append(chevron, name, count);
+    folder.appendChild(header);
+    const body = document.createElement('div');
+    body.className = 'folder-grid-wrap';
+    if(sec.sections){
+      sec.sections.forEach(week => { const child = buildSection(week); if(child) body.appendChild(child); });
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'lib-grid';
+      quizzes.forEach(q => grid.appendChild(buildShippedCard(q, attempts)));
+      body.appendChild(grid);
+    }
+    folder.appendChild(body);
+    return folder;
+  }
+  sections.forEach(sec => { const folder = buildSection(sec); if(folder) root.appendChild(folder); });
 }
 
 /* Show a warning banner in the shipped area (text only - safe). */
@@ -1902,8 +1910,8 @@ function loadManifest() {
         if (pw) {
           try {
             const pm = await _fetchProtectedManifest(pw);
-            /* Protected sections first (week groups), demo last */
-            allSections = pm.sections.concat(allSections);
+            /* Protected Blocks contain existing Week groups; Demo stays public. */
+            allSections = groupProtectedSections(pm.sections).concat(allSections);
             _showLockControl(true);
           } catch(e) {
             _showLockControl(false);
@@ -1920,7 +1928,24 @@ function loadManifest() {
     });
 }
 
+/* Hash navigation keeps creation separate without a second app or parser. */
+function showHomeView(){
+  const creating = location.hash === '#create';
+  document.getElementById('lib-col').hidden = creating;
+  document.getElementById('create-rail').hidden = !creating;
+  ['library', 'create'].forEach(view => {
+    const link = document.getElementById('nav-' + view);
+    if((view === 'create') === creating) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+}
+window.addEventListener('hashchange', () => {
+  showHomeView();
+  document.querySelector(location.hash === '#create' ? '#create-title' : '#lib-col h1').focus();
+});
+
 /* ── Init ── */
+showHomeView();
 seedIfNeeded();
 applySettings();
 renderLibrary();
