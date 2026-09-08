@@ -49,7 +49,7 @@ test('locked home shows only Demo; unlock groups existing weeks without changing
     await new Promise(resolve => setTimeout(resolve, 20));
     assert.deepEqual([...doc.querySelectorAll('#shipped-root > details')].map(el => el.dataset.sectionId), ['block-cardio', 'block-neuro-psych', 'block-other', 'demo']);
     const cardio = doc.querySelector('[data-section-id="block-cardio"]');
-    assert.deepEqual([...cardio.querySelectorAll('details')].map(el => el.dataset.sectionId), ['week-01', 'week-05']);
+    assert.deepEqual([...cardio.querySelectorAll('details[data-section-id]')].map(el => el.dataset.sectionId), ['week-01', 'week-05']);
     assert.equal(cardio.querySelectorAll('[data-shipped-id]').length, 2);
     assert.equal(doc.querySelector('[data-section-id="block-neuro-psych"]').querySelectorAll('[data-shipped-id]').length, 1);
     assert.equal(doc.querySelectorAll('#shipped-root details[open]').length, 0);
@@ -105,5 +105,35 @@ test('creation view preserves the prompt, validation, imported fields, and retur
     assert.equal(doc.querySelector('#custom-section').open, true);
     assert.equal(doc.querySelector('#paste-area').value, '');
     assert.equal(doc.querySelector('#nav-library').getAttribute('aria-current'), 'page');
+  } finally { dom.window.close(); }
+});
+
+
+test('mixed builder is protected, validates counts, stores only a recipe, and clears on lock', async () => {
+  const dom = await page();
+  try {
+    const win = dom.window, doc = win.document;
+    assert.equal(doc.querySelector('.mixed-builder'), null);
+    win.localStorage.setItem('qf_unlock_pw', 'synthetic-test-only');
+    win._fetchProtectedManifest = async () => ({sections: weeks});
+    win.loadManifest();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const form = doc.querySelector('[data-section-id="block-cardio"] .mixed-form');
+    assert.ok(form);
+    const start = form.querySelector('[type="submit"]'), count = form.querySelector('[type="number"]');
+    assert.equal(start.disabled, true);
+    form.querySelector('button').click();
+    assert.equal(form.querySelectorAll('input[type="checkbox"]:checked').length, 2);
+    count.value = '2'; count.dispatchEvent(new win.Event('input'));
+    assert.equal(start.disabled, false);
+    count.value = '3'; count.dispatchEvent(new win.Event('input'));
+    assert.equal(start.disabled, true);
+    count.value = '2'; count.dispatchEvent(new win.Event('input'));
+    form.dispatchEvent(new win.Event('submit', {cancelable: true}));
+    assert.deepEqual(JSON.parse(win.sessionStorage.getItem('qf_mixed_recipe')), {quizIds: ['cardio-w01-a', 'cardio-w05-a'], count: 2});
+    win.lockSite();
+    assert.equal(win.sessionStorage.getItem('qf_mixed_recipe'), null);
+    assert.equal(doc.querySelector('.mixed-builder'), null);
+    await new Promise(resolve => setTimeout(resolve, 20));
   } finally { dom.window.close(); }
 });

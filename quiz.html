@@ -872,6 +872,12 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 [data-theme="dark"][data-skin="examsoft"] .q-circle.answered.current{
   background:var(--accent);border-color:var(--accent);color:#fff;
 }
+
+/* Keep mixed-test controls reachable on phones without changing other quizzes. */
+@media(max-width:560px){
+  body.mixed-test .topbar{flex-wrap:wrap;height:auto;min-height:54px}
+  body.mixed-test #qbar-tools{order:2;flex-basis:100%;max-width:100%;height:40px}
+}
 </style>
 </head>
 <body>
@@ -1123,6 +1129,9 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 // ── STATE ────────────────────────────────────────────────────────────────────
 const _params      = new URLSearchParams(location.search);
 const _quizId      = _params.get('id');   /* ?id= path (localStorage) */
+const _mixedParam  = _params.has('mixed');
+if(_mixedParam) document.body.classList.add('mixed-test');
+let _mixedAccessRevoked = false;
 const _srcParam    = _params.get('src');  /* ?src= path (shipped file) */
 let _isShipped     = false;               /* true when loaded via ?src= */
 let _shippedQuizId = null;               /* id field from the shipped quiz JSON */
@@ -1237,6 +1246,7 @@ async function _postProcessMedia(container) {
       const r = await fetch('quizzes/protected/media/' + encodeURIComponent(baseName) + '.enc?v=' + Date.now());
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const plain = await _qfeDecrypt(await r.arrayBuffer(), _protectedQuizKey);
+      if(!_isProtectedQuiz || !_protectedQuizKey) return;
       const blob  = new Blob([plain]);
       const url   = URL.createObjectURL(blob);
       _mediaBlobCache.set(baseName, url);
@@ -1306,6 +1316,103 @@ async function loadShippedQuiz(src) {
   }
 }
 
+/* Shared by the single protected quiz and mixed-test load paths. */
+async function _protectedContext(pw) {
+  const r = await fetch('quizzes/manifest.json?v=' + Date.now());
+  if(!r.ok) throw new Error('manifest HTTP ' + r.status);
+  const manifest = await r.json();
+  if(!manifest.protected || !manifest.protected.kdf || !manifest.protected.kdf.salt)
+    throw new Error('public manifest missing protected kdf params');
+  return {manifest, key: await _qfeDeriveKey(pw, manifest.protected.kdf.salt, ['decrypt'])};
+}
+async function _fetchProtectedJson(src, key) {
+  if(!/^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/.test(src)) throw new Error('Invalid protected quiz path.');
+  const r = await fetch(src + '?v=' + Date.now());
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const plain = await _qfeDecrypt(await r.arrayBuffer(), key);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+/* Copies pools; source questions and choice order remain untouched. */
+function sampleMixedQuestions(lectures, count, random = Math.random) {
+  function shuffle(items) {
+    for(let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items;
+  }
+  const seen = new Set();
+  const pools = shuffle(lectures.map(lecture => shuffle(lecture.questions.flatMap((q, index) => {
+    const qid = q.qid == null ? null : q.qid;
+    const identity = JSON.stringify([lecture.id, lecture.revision, qid == null ? ['index', index] : ['qid', qid]]);
+    if(seen.has(identity)) return [];
+    seen.add(identity);
+    return [{...q, options: q.options.slice(), source: {quizId: lecture.id, revision: lecture.revision, qid, index, title: lecture.title}}];
+  }))));
+  const total = pools.reduce((n, pool) => n + pool.length, 0);
+  if(!Number.isSafeInteger(count) || count < 1) throw new Error('Choose a positive whole number of questions.');
+  if(count > total) throw new Error('Only ' + total + ' unique questions are available. Return to the library and choose a smaller count.');
+  const result = [];
+  while(result.length < count) {
+    for(const pool of pools) {
+      if(pool.length) result.push(pool.pop());
+      if(result.length === count) break;
+    }
+  }
+  return shuffle(result);
+}
+
+async function _loadMixedQuiz() {
+  try {
+    const pw = localStorage.getItem('qf_unlock_pw');
+    if(!pw || _mixedAccessRevoked) throw new Error('This test is locked. Return to the library to unlock.');
+    let recipe;
+    try { recipe = JSON.parse(sessionStorage.getItem('qf_mixed_recipe')); } catch(e) {}
+    if(!recipe || !Array.isArray(recipe.quizIds) || !recipe.quizIds.length || recipe.quizIds.some(id => typeof id !== 'string' || !id) || !Number.isSafeInteger(recipe.count) || recipe.count < 1)
+      throw new Error('Choose lectures and a question count in the library first.');
+    const {manifest, key} = await _protectedContext(pw);
+    const catalog = await _fetchProtectedJson(manifest.protected.manifest, key);
+    if(!catalog || !Array.isArray(catalog.sections)) throw new Error('Invalid protected manifest.');
+    const entries = new Map(catalog.sections.flatMap(sec => sec.quizzes || []).map(q => [q.id, q]));
+    const ids = [...new Set(recipe.quizIds)];
+    if(ids.some(id => !entries.has(id))) throw new Error('A selected lecture is unavailable. Choose lectures again in the library.');
+    const lectures = [];
+    for(const id of ids) {
+      if(_mixedAccessRevoked || localStorage.getItem('qf_unlock_pw') !== pw) throw new Error('This test is locked.');
+      const entry = entries.get(id), data = await _fetchProtectedJson(entry.file, key);
+      if(data.id !== id || !Array.isArray(data.questions) || !data.questions.length || data.questions.some(q => !q || typeof q.text !== 'string' || !Array.isArray(q.options) || q.options.length < 2 || !Number.isInteger(q.correct) || q.correct < 0 || q.correct >= q.options.length))
+        throw new Error('A selected lecture has invalid question data. Return to the library.');
+      lectures.push({...data, title: data.title || entry.title});
+    }
+    const mixed = sampleMixedQuestions(lectures, recipe.count);
+    if(_mixedAccessRevoked || localStorage.getItem('qf_unlock_pw') !== pw) throw new Error('This test is locked.');
+    questions = mixed.map(q => ({...q, explanation: _composeExplanation(q)}));
+    _isShipped = true; _isProtectedQuiz = true; _protectedQuizKey = key;
+    _quizTitle = 'Mixed Test'; _quizSubtitle = ids.length + ' lectures · ' + questions.length + ' questions';
+    return true;
+  } catch(err) {
+    _showQuizError('Could not start mixed test — ' + (err && err.message ? err.message : 'load failed'));
+    return false;
+  }
+}
+
+function invalidateMixedTest() {
+  if(!_mixedParam) return;
+  _mixedAccessRevoked = true; _isProtectedQuiz = false; _protectedQuizKey = null;
+  questions = []; selected = []; eliminated = []; flagged = []; revealed = []; submitted = true;
+  try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
+  _mediaBlobUrls.splice(0).forEach(url => URL.revokeObjectURL(url)); _mediaBlobCache.clear();
+  document.querySelectorAll('.overlay.open').forEach(el => el.classList.remove('open'));
+  _showQuizError('This test is locked. Return to the library to unlock and build a new test.');
+}
+window.addEventListener('storage', event => {
+  if(event.key === null || (event.key === 'qf_unlock_pw' && event.newValue !== event.oldValue)) invalidateMixedTest();
+});
+window.addEventListener('pageshow', () => {
+  if(_mixedParam && !localStorage.getItem('qf_unlock_pw')) invalidateMixedTest();
+});
+
 /* ── Encrypted quiz path (quizzes/protected/*.enc) ───────────────────────────
    Requires qf_unlock_pw in localStorage. Fetches kdf params from the public
    manifest, derives the key, fetches+decrypts the quiz, then continues as the
@@ -1328,21 +1435,8 @@ async function _loadProtectedQuiz(src) {
     return false;
   }
   try {
-    /* Fetch public manifest to get kdf params */
-    const mr = await fetch('quizzes/manifest.json?v=' + Date.now());
-    if (!mr.ok) throw new Error('manifest HTTP ' + mr.status);
-    const mdata = await mr.json();
-    if (!mdata.protected || !mdata.protected.kdf || !mdata.protected.kdf.salt)
-      throw new Error('public manifest missing protected kdf params');
-    const { salt } = mdata.protected.kdf;
-
-    const key = await _qfeDeriveKey(pw, salt, ['decrypt']);
-
-    /* Fetch + decrypt quiz */
-    const r = await fetch(src + '?v=' + Date.now());
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const plain = await _qfeDecrypt(await r.arrayBuffer(), key);
-    const data  = JSON.parse(new TextDecoder().decode(plain));
+    const {key} = await _protectedContext(pw);
+    const data = await _fetchProtectedJson(src, key);
     if (!data || !Array.isArray(data.questions) || !data.questions.length)
       throw new Error('invalid quiz JSON — missing questions array');
 
@@ -1589,6 +1683,10 @@ function render() {
   if (showFeedback) {
     const _etEl = document.getElementById('exp-text');
     _etEl.innerHTML = sanitizeHtml(q.explanation, _isShipped ? 'shipped' : 'pasted');
+    if(_mixedParam && q.source) {
+      const source = document.createElement('p'); source.className = 'explanation-citation';
+      source.textContent = 'Lecture: ' + q.source.title; _etEl.prepend(source);
+    }
     if (_isProtectedQuiz) _postProcessMedia(_etEl); /* fire-and-forget */
     expBox.classList.add('visible');
   } else {
@@ -1944,6 +2042,7 @@ function animateSubmitReveal() {
 // Shipped quizzes → qf_shipped_attempts (keyed by quiz id, includes revision)
 // Custom/pasted quizzes → qf_scores (existing key, unchanged)
 function saveAttempt(correct, pct) {
+  if(_mixedParam) return; /* Mixed results are available for this run only. */
   try {
     const per = questions.map((q, qi) => ({ q: qi, correct: selected[qi] === q.correct, picked: selected[qi] }));
     const attempt = {
@@ -2199,7 +2298,9 @@ function initUI() {
   }
 }
 
-if (_srcParam) {
+if (_mixedParam) {
+  (async function() { if(await _loadMixedQuiz()) initUI(); })();
+} else if (_srcParam) {
   /* Shipped quiz: async fetch, then initUI on success.
      On failure, loadShippedQuiz shows an on-page error and returns false —
      do NOT call initUI/showEmptyState in that case. */

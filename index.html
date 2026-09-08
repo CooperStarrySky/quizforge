@@ -399,6 +399,19 @@ summary.folder-hdr:hover .folder-name{color:var(--accent)}
   display:none;line-height:1.45;
 }
 .shipped-banner.visible{display:block}
+
+/* Mixed tests use the existing block and form controls. */
+.mixed-builder{margin:0 10px 18px;padding:14px;border:1px solid var(--line);border-radius:8px}
+.mixed-builder > summary{cursor:pointer;font-weight:600}
+.mixed-form{display:grid;gap:12px;margin-top:14px}
+.mixed-form fieldset{margin:0;padding:10px;border:1px solid var(--line);min-width:0}
+.mixed-form legend{padding:0 5px;color:var(--ink-3)}
+.mixed-choice{display:flex;align-items:flex-start;gap:8px;padding:6px 0;overflow-wrap:anywhere}
+.mixed-choice input{flex:none;margin-top:3px}
+.mixed-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mixed-count{width:80px;margin-left:8px;padding:6px;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:4px}
+.mixed-note{margin:0;font-size:.82rem;color:var(--ink-3)}
+.mixed-form button:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
@@ -1691,6 +1704,72 @@ function groupProtectedSections(sections){
   return Array.from(blocks.values());
 }
 
+/* Only called for blocks from a successfully decrypted protected manifest. */
+function buildMixedTest(block){
+  const panel = document.createElement('details');
+  panel.className = 'mixed-builder';
+  const heading = document.createElement('summary');
+  heading.textContent = 'Build Test';
+  const form = document.createElement('form');
+  form.className = 'mixed-form';
+  const choices = [], seen = new Set();
+  const actions = document.createElement('div');
+  actions.className = 'mixed-actions';
+  ['Select All', 'Clear'].forEach((title, i) => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'btn btn-ghost btn-sm'; button.textContent = title;
+    button.addEventListener('click', () => { choices.forEach(c => c.input.checked = i === 0); update(); });
+    actions.appendChild(button);
+  });
+  form.appendChild(actions);
+  block.sections.forEach(week => {
+    const group = document.createElement('fieldset');
+    const legend = document.createElement('legend'); legend.textContent = week.name || week.id;
+    group.appendChild(legend);
+    week.quizzes.forEach(entry => {
+      if(seen.has(entry.id) || !/^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/.test(entry.file)) return;
+      seen.add(entry.id);
+      const label = document.createElement('label'); label.className = 'mixed-choice';
+      const input = document.createElement('input'); input.type = 'checkbox'; input.value = entry.id;
+      input.addEventListener('change', update);
+      const name = document.createElement('span'); name.textContent = dash(entry.title);
+      label.append(input, name); group.appendChild(label);
+      choices.push({input, count: Math.max(0, Number(entry.question_count) || 0)});
+    });
+    if(group.querySelector('input')) form.appendChild(group);
+  });
+  const controls = document.createElement('div'); controls.className = 'mixed-actions';
+  const label = document.createElement('label'); label.textContent = 'Questions';
+  const count = document.createElement('input');
+  count.type = 'number'; count.className = 'mixed-count'; count.min = '1'; count.step = '1'; count.value = '20'; count.required = true;
+  count.addEventListener('input', update); label.appendChild(count);
+  const available = document.createElement('span'); available.className = 'mixed-note'; available.setAttribute('aria-live', 'polite');
+  const start = document.createElement('button'); start.type = 'submit'; start.className = 'btn btn-primary btn-sm'; start.textContent = 'Start Test';
+  controls.append(label, available, start);
+  const note = document.createElement('p'); note.className = 'mixed-note';
+  note.textContent = 'Random questions, balanced across lectures. Results are for this run only. Reloading starts a new mix and resets progress.';
+  const error = document.createElement('p'); error.className = 'mixed-note'; error.setAttribute('role', 'alert');
+  form.append(controls, note, error);
+  function update(){
+    const picked = choices.filter(c => c.input.checked);
+    const total = picked.reduce((n, c) => n + c.count, 0), n = Number(count.value);
+    count.max = String(total);
+    available.textContent = total + ' available';
+    start.disabled = !picked.length || !Number.isSafeInteger(n) || n < 1 || n > total;
+    error.textContent = '';
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault(); update();
+    if(start.disabled) return;
+    if(!_mixedUnlocked || !store.get(UNLOCK_PW_KEY, '')) { lockSite(); return; }
+    try {
+      sessionStorage.setItem('qf_mixed_recipe', JSON.stringify({quizIds: choices.filter(c => c.input.checked).map(c => c.input.value), count: Number(count.value)}));
+      location.href = 'quiz.html?mixed=1';
+    } catch(e) { error.textContent = 'Browser storage is unavailable. Enable it to start a mixed test.'; }
+  });
+  update(); panel.append(heading, form); return panel;
+}
+
 /* Native details provide keyboard support and start collapsed on every load. */
 function renderShippedSections(sections){
   const root = document.getElementById('shipped-root');
@@ -1722,6 +1801,7 @@ function renderShippedSections(sections){
     const body = document.createElement('div');
     body.className = 'folder-grid-wrap';
     if(sec.sections){
+      if(_mixedUnlocked) body.appendChild(buildMixedTest(sec));
       sec.sections.forEach(week => { const child = buildSection(week); if(child) body.appendChild(child); });
     } else {
       const grid = document.createElement('div');
@@ -1785,6 +1865,7 @@ async function _qfeDecrypt(buf, key) {
 
 /* ── Protected manifest state ───────────────────────────────────────────────── */
 const UNLOCK_PW_KEY = 'qf_unlock_pw';
+let _mixedUnlocked = false, _manifestLoadId = 0;
 let _protSalt = null;          /* base64 salt from public manifest.protected.kdf */
 let _protManifestUrl = null;   /* URL string from public manifest.protected.manifest */
 
@@ -1809,6 +1890,8 @@ function _showLockControl(visible) {
 
 /* Clear qf_unlock_pw and re-render the page without protected content. */
 function lockSite() {
+  _mixedUnlocked = false;
+  try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
   try { localStorage.removeItem(UNLOCK_PW_KEY); } catch(e) {}
   _showLockControl(false);
   document.getElementById('shipped-root').innerHTML = '';
@@ -1816,6 +1899,16 @@ function lockSite() {
   if (ch) ch.style.display = 'none';
   loadManifest();
 }
+
+window.addEventListener('storage', event => {
+  if(event.key === null || (event.key === UNLOCK_PW_KEY && event.newValue !== event.oldValue)) {
+    _mixedUnlocked = false;
+    try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
+    document.getElementById('shipped-root').innerHTML = '';
+    _showLockControl(false);
+    loadManifest();
+  }
+});
 
 /* Passphrase modal functions */
 function openUnlockModal() {
@@ -1886,6 +1979,8 @@ async function attemptUnlock() {
    If not unlocked: the page renders exactly like a public QuizForge. */
 function loadManifest() {
   if(location.protocol === 'file:') return;
+  const loadId = ++_manifestLoadId;
+  _mixedUnlocked = false;
   fetch('quizzes/manifest.json?v=' + Date.now())
     .then(r => {
       if(!r.ok) throw new Error('HTTP ' + r.status);
@@ -1910,6 +2005,8 @@ function loadManifest() {
         if (pw) {
           try {
             const pm = await _fetchProtectedManifest(pw);
+            if(loadId !== _manifestLoadId || store.get(UNLOCK_PW_KEY, '') !== pw) return;
+            _mixedUnlocked = true;
             /* Protected Blocks contain existing Week groups; Demo stays public. */
             allSections = groupProtectedSections(pm.sections).concat(allSections);
             _showLockControl(true);
@@ -1921,7 +2018,7 @@ function loadManifest() {
         /* If not unlocked: render nothing about protected content */
       }
 
-      renderShippedSections(allSections);
+      if(loadId === _manifestLoadId) renderShippedSections(allSections);
     })
     .catch(err => {
       showShippedBanner('Shipped quizzes unavailable — ' + (err && err.message ? err.message : 'fetch failed'));
