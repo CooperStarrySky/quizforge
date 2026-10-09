@@ -21,7 +21,12 @@ Keep the answer from leaking:
 - Do not echo a distinctive word from the stem in the correct choice only.
 - Avoid "all of the above", "none of the above", and absolute words like "always" or "never".
 
-For each question, write an explanation that says why the correct answer is right and, briefly, why each other choice is wrong.
+For each question, write an explanation that says why the correct answer is right and, briefly, why each other choice is wrong. The explanation is the part students read most, so it must be broken into readable blocks:
+
+- Put a line break after the paragraph that explains the correct answer, before the choices begin.
+- Give every wrong choice its own line, each one starting with a line break, so no two choice explanations ever run together in the same block of text.
+
+Use a blank line (two line breaks in a row) between major parts - before the first choice explanation and before the citation - so the parts stay visually separate. A student should be able to skim just the correct-answer paragraph, or just the wrong-choice lines, without reading a single unbroken wall of text.
 
 Before you finish, re-solve every question yourself with the choices covered up. If the answer you reach does not match your answer key, fix the question. Do not state anything the material does not support; if you are unsure of a fact, leave it out rather than guess.
 
@@ -36,7 +41,7 @@ Output format - return ONE fenced code block of JSON and nothing else. No text b
       "text": "A short clinical vignette or focused concept question, ending in a question mark.",
       "options": ["First option", "Second option", "Third option", "Fourth option"],
       "correct": 0,
-      "explanation": "<strong>The first option is correct.</strong> Why it is the best answer. <br>Then one short line on why each other option is wrong.",
+      "explanation": "<strong>The first option is correct.</strong> One or two sentences on why it is the best answer, ending with a line break.<br><br><strong>Second option</strong> is wrong because ...<br><strong>Third option</strong> is wrong because ...<br><strong>Fourth option</strong> is wrong because ...<br><br>Slide 14",
       "citation": "Slide 14"
     }
   ]
@@ -47,6 +52,7 @@ Field rules:
 
 - "correct" is the 0-based index of the best option: 0 is the first option, 1 the second, and so on.
 - "explanation" may use simple HTML: <strong>, <em>, and <br>. No images.
+- Line breaks are required, not optional: one after the correct-answer paragraph and one before each wrong-choice explanation, with a blank line between major parts (use <br><br>). Never return a single unbroken paragraph of explanation.
 - "citation" is optional. Use it to point back to a slide or page when you can.
 - Before you finish, re-check that every "correct" index really points at the answer you intend.
 
