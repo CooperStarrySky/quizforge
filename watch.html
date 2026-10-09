@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch-along · QuizForge</title>
+<meta name="robots" content="noindex">
+<script>
+/* Apply saved theme/accent/size before first paint (no flash of the wrong theme). */
+(function(){try{var d=document.documentElement,L=window.localStorage;
+  var a=L.getItem('quizAccent')||'examplify'; if(a==='petrol') a='examplify';
+  d.setAttribute('data-accent', a);
+  var sc = parseFloat(L.getItem('quizTextScale') || '1') || 1;
+  d.style.setProperty('--cscale', sc);
+  var t = L.getItem('quizTheme') || 'system';
+  var r = t==='system' ? (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light') : t;
+  d.setAttribute('data-theme', r);
+}catch(e){}})();
+</script>
+<style>
+/* Theme variables copied from index.html (keep in sync). */
+:root{
+  /* ── EXAMPLIFY THEME: flat, light, credible ── */
+  --font-read:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --cscale:1;
+  --accent-base:#1f6db5;
+
+  /* ── LIGHT (Examplify default) ── */
+  --paper:#f6f7f9; --surface:#ffffff;
+  --ink:#202733; --ink-2:#586273; --ink-3:#687487;
+  --line:#dde2e8; --line-strong:#c3cad3;
+  --spine:#1c2e4a;
+  --correct:#2e7d4f; --correct-bg:#e9f4ee;
+  --wrong:#b3402e;   --wrong-bg:#fbece8;
+  --flag:#b07d22;    --flag-bg:#fbf4e6;
+  /* aliases used by the ported hub-card components */
+  --good:#2e7d4f; --good-bg:#e9f4ee; --bad:#b3402e; --bad-bg:#fbece8; --warn:#b07d22;
+  --sh-menu:0 6px 20px rgba(20,24,33,.10);
+  --sh-modal:0 18px 50px rgba(20,24,33,.20);
+  --overlay:rgba(20,24,33,.42);
+  --accent:var(--accent-base);
+  --accent-hover:color-mix(in srgb, var(--accent-base), #000 16%);
+  --accent-tint:color-mix(in srgb, var(--accent-base) 13%, var(--surface));
+  --ring:0 0 0 3px color-mix(in srgb, var(--accent-base) 30%, transparent);
+}
+/* ── ACCENT CHOICES ── */
+:root[data-accent="examplify"]{--accent-base:#1f6db5}
+:root[data-accent="ocean"]{--accent-base:#1f6f8b}
+:root[data-accent="indigo"]{--accent-base:#4f4bd0}
+:root[data-accent="violet"]{--accent-base:#7350c9}
+:root[data-accent="slate"]{--accent-base:#506087}
+/* ── DARK THEME ── */
+:root[data-theme="dark"]{
+  --paper:#14161b; --surface:#1c1f26;
+  --ink:#e6e9ef; --ink-2:#abb4c2; --ink-3:#9aa5b5;
+  --line:#2a2e37; --line-strong:#3a3f4a;
+  --spine:#0f1115;
+  --correct:#5cc298; --correct-bg:#15271f;
+  --wrong:#e0795f;   --wrong-bg:#2c1a16;
+  --flag:#d8a33f;    --flag-bg:#2a2212;
+  --good:#5cc298; --good-bg:#15271f; --bad:#e0795f; --bad-bg:#2c1a16; --warn:#d8a33f;
+  --sh-menu:0 8px 24px rgba(0,0,0,.5);
+  --sh-modal:0 20px 56px rgba(0,0,0,.62);
+  --overlay:rgba(0,0,0,.62);
+  --accent:color-mix(in oklab, var(--accent-base), white 30%);
+  --accent-hover:color-mix(in srgb, var(--accent), white 14%);
+  --accent-tint:color-mix(in srgb, var(--accent) 22%, var(--surface));
+  --ring:0 0 0 3px color-mix(in srgb, var(--accent) 38%, transparent);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+body{font-family:var(--font-ui);background:var(--paper);color:var(--ink);min-height:100dvh;
+  -webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:none;box-shadow:var(--ring);border-radius:4px}
+button{font:inherit;color:inherit}
+.topbar{background:var(--surface);min-height:60px;position:sticky;top:0;z-index:30;display:flex;align-items:center;
+  justify-content:space-between;gap:14px;padding:10px max(20px,calc((100vw - 1240px)/2));border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:12px;min-width:0}
+.brand-mark{font-size:1.15rem;font-weight:750;letter-spacing:-.045em;white-space:nowrap}
+.crumb{font-size:.85rem;color:var(--ink-2);white-space:nowrap}
+.tb-btn{background:transparent;border:1px solid var(--line);color:var(--ink-2);font-size:.8rem;font-weight:500;
+  padding:7px 13px;border-radius:6px;white-space:nowrap}
+.tb-btn:hover{background:var(--paper);border-color:var(--line-strong)}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 48px}
+.notice{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;color:var(--ink-2)}
+.notice a{color:var(--accent);font-weight:600}
+.w-title{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;line-height:1.25;margin-bottom:4px;overflow-wrap:anywhere}
+.w-sub{font-size:.86rem;color:var(--ink-2);margin-bottom:16px;overflow-wrap:anywhere}
+.w-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:18px;align-items:start}
+.video-col,.side-col{min-width:0;display:flex;flex-direction:column;gap:14px}
+.frame{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.frame-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hint,.help{font-size:.8rem;color:var(--ink-2);line-height:1.45}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel h2{font-size:.95rem;font-weight:650;margin-bottom:8px}
+.btn{font-size:.86rem;font-weight:600;cursor:pointer;border-radius:7px;padding:9px 14px;border:1px solid transparent;
+  transition:background .13s var(--ease),border-color .13s;white-space:nowrap;display:inline-flex;align-items:center}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-ghost{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
+.btn-ghost:hover:not(:disabled){border-color:var(--ink-3)}
+.btn-sm{font-size:.8rem;padding:7px 11px}
+.linklike{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-size:.82rem;text-align:left}
+.linklike:hover{text-decoration:underline}
+.clock-row{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.clock{font-family:var(--font-mono);font-size:1.9rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dur{font-family:var(--font-mono);color:var(--ink-2);font-size:.95rem}
+.run-state{margin-left:auto;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.run-state.on{color:var(--correct)}
+.strip{position:relative;height:26px;margin:4px 6px 12px;cursor:pointer}
+.strip::before{content:"";position:absolute;left:0;right:0;top:11px;height:4px;border-radius:2px;background:var(--line)}
+.strip-fill{position:absolute;left:0;top:11px;height:4px;border-radius:2px;background:var(--accent);width:0}
+.tick{position:absolute;top:4px;width:12px;height:18px;margin-left:-6px;border-radius:3px;border:2px solid var(--surface);
+  background:var(--ink-3);cursor:pointer;padding:0}
+.tick.right{background:var(--correct)}
+.tick.missed{background:var(--wrong)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.75rem;color:var(--ink-2);margin:-4px 0 12px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--ink-3)}
+.legend i.right{background:var(--correct)} .legend i.missed{background:var(--wrong)}
+.ctl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.speed{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:var(--ink-2)}
+select,.time-input{font:inherit;font-size:.86rem;color:var(--ink);background:var(--paper);border:1px solid var(--line-strong);
+  border-radius:7px;padding:8px 10px}
+.time-input{width:7.5em;font-family:var(--font-mono)}
+select:focus,.time-input:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
+.set-err{font-size:.78rem;color:var(--wrong);flex-basis:100%}
+.set-err:empty{display:none}
+.score{font-size:.88rem;font-weight:600;margin:8px 0 4px}
+.note{font-size:.82rem;color:var(--ink-2);min-height:1.2em;margin-bottom:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.card{border-color:var(--accent);box-shadow:var(--sh-menu)}
+.pause-banner{background:var(--flag-bg);color:var(--flag);border:1px solid color-mix(in srgb,var(--flag) 40%,transparent);
+  border-radius:8px;padding:9px 12px;font-weight:700;font-size:.9rem;margin-bottom:12px}
+.kicker{font-size:.76rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px;overflow-wrap:anywhere}
+.q-text,.exp{font-family:var(--font-read);font-size:calc(.98rem * var(--cscale));line-height:1.6;overflow-wrap:anywhere}
+.q-text img,.exp img{max-width:100%;height:auto;display:block;margin:8px 0;border-radius:6px}
+.q-text table,.exp table{border-collapse:collapse;margin:8px 0;font-size:.9em;display:block;overflow-x:auto;max-width:100%}
+.q-text td,.q-text th,.exp td,.exp th{border:1px solid var(--line);padding:4px 8px}
+.opts{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.opt{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:var(--surface);
+  border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;cursor:pointer;font-size:calc(.92rem * var(--cscale));line-height:1.45}
+.opt:hover:not(:disabled){border-color:var(--ink-3)}
+.opt .k{flex:none;width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-size:.75rem;font-weight:700;
+  background:var(--paper);border:1px solid var(--line)}
+.opt .t{min-width:0;overflow-wrap:anywhere}
+.opt.sel{border-color:var(--accent);background:var(--accent-tint)}
+.opt.right{border-color:var(--correct);background:var(--correct-bg)}
+.opt.wrong{border-color:var(--wrong);background:var(--wrong-bg)}
+.opt:disabled{cursor:default}
+.verdict{font-weight:700;margin-bottom:6px}
+.verdict.right{color:var(--correct)} .verdict.wrong{color:var(--wrong)}
+.exp{border-top:1px solid var(--line);padding-top:10px;margin-bottom:12px;color:var(--ink)}
+.missed-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.missed-list .linklike{overflow-wrap:anywhere}
+@media(max-width:900px){
+  .w-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:480px){
+  .topbar{padding:10px 14px}
+  .wrap{padding:14px 12px 40px}
+  .panel{padding:13px}
+  .clock{font-size:1.6rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><a class="brand-mark" href="index.html">QuizForge</a><span class="crumb">Watch-along</span></div>
+  <a class="tb-btn" href="index.html">Library</a>
+</div>
+<main class="wrap">
+  <p id="status" class="notice" role="status">Loading…</p>
+  <div id="app" hidden>
+    <h1 id="w-title" class="w-title"></h1>
+    <p id="w-sub" class="w-sub"></p>
+    <div class="w-grid">
+      <section class="video-col" aria-label="Lecture video">
+        <div class="frame"><iframe id="echo" title="Echo360 lecture" allow="fullscreen; autoplay; encrypted-media"
+          referrerpolicy="no-referrer"></iframe></div>
+        <div class="frame-bar">
+          <a id="open-echo" class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer"
+            referrerpolicy="no-referrer">Open in Echo360 tab</a>
+          <span class="hint">If the video shows a login page, use Open in Echo360 tab.</span>
+        </div>
+      </section>
+      <section class="side-col" aria-label="Watch-along">
+        <div id="card" class="panel card" hidden>
+          <div class="pause-banner" role="alert">Pause Echo360 now</div>
+          <p id="q-kicker" class="kicker"></p>
+          <div id="q-text" class="q-text" tabindex="-1"></div>
+          <div id="q-opts" class="opts" role="group" aria-label="Answer choices"></div>
+          <div id="q-result" hidden>
+            <p id="q-verdict" class="verdict"></p>
+            <div id="q-exp" class="exp"></div>
+          </div>
+          <div class="ctl-row">
+            <button id="q-submit" class="btn btn-primary" type="button" disabled>Submit</button>
+            <button id="q-continue" class="btn btn-primary" type="button" hidden>Continue</button>
+          </div>
+          <p class="help">Keys: 1-5 pick A-E, Enter to submit, Enter again to continue.</p>
+        </div>
+        <div id="ctl" class="panel">
+          <div class="clock-row">
+            <span id="clock" class="clock">0:00</span><span id="dur" class="dur"></span>
+            <span id="run-state" class="run-state">Paused</span>
+          </div>
+          <div id="strip" class="strip" title="Click to set the clock"><div id="strip-fill" class="strip-fill"></div></div>
+          <div class="legend" aria-hidden="true"><span><i></i>to come</span><span><i class="right"></i>correct</span><span><i class="missed"></i>missed</span></div>
+          <div class="ctl-row">
+            <button id="play" class="btn btn-primary" type="button">Start clock</button>
+            <button id="back10" class="btn btn-ghost" type="button" aria-label="Back 10 seconds">-10 s</button>
+            <button id="fwd10" class="btn btn-ghost" type="button" aria-label="Forward 10 seconds">+10 s</button>
+            <label class="speed">Speed <select id="rate"></select></label>
+          </div>
+          <form id="set-form" class="ctl-row" novalidate>
+            <label for="set-input" class="sr">Set clock time (mm:ss or h:mm:ss)</label>
+            <input id="set-input" class="time-input" inputmode="numeric" placeholder="mm:ss" autocomplete="off">
+            <button class="btn btn-ghost" type="submit">Set time</button>
+            <span id="set-err" class="set-err" role="alert"></span>
+          </form>
+          <p class="help">Press Start clock when you press play in Echo360, and use the same speed. At each checkpoint the clock stops and a question opens. Space starts or pauses the clock.</p>
+          <p id="score" class="score"></p>
+          <p id="note" class="note" role="status"></p>
+          <button id="reset" class="linklike" type="button">Start over (clears this lecture's answers)</button>
+        </div>
+        <div id="missed" class="panel" hidden>
+          <h2>Review missed</h2>
+          <ul id="missed-list" class="missed-list"></ul>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<script src="watch_logic.js"></script>
+<script src="watch.js"></script>
+</body>
+</html>

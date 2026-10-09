@@ -244,6 +244,8 @@ button:active,.take:active{transform:translateY(1px)}
   padding:8px 15px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
   cursor:pointer;transition:background .12s}
 .take:hover{background:var(--accent)}
+.take-watch{background:var(--surface);color:var(--ink);border:1px solid var(--line-strong)}
+.take-watch:hover{background:var(--accent-tint);border-color:var(--accent)}
 .take svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;transition:transform .15s var(--ease)}
 .take:hover svg{transform:translateX(2px)}
 .mini-btn{font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
@@ -1689,6 +1691,15 @@ function buildShippedCard(entry, allAttempts) {
   actionsRow.className = 'row actions-row';
   actionsRow.appendChild(takeLink);
 
+  /* Watch-along link: only protected lectures listed in the decrypted watch index. */
+  if(_mixedUnlocked && _watchIds.has(entry.id) && /^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/.test(entry.file)){
+    const watchLink = document.createElement('a');
+    watchLink.className = 'take take-watch';
+    watchLink.href = 'watch.html?id=' + encodeURIComponent(entry.id);
+    watchLink.textContent = 'Watch-along';
+    actionsRow.appendChild(watchLink);
+  }
+
   const rows = document.createElement('div');
   rows.className = 'rows';
   rows.appendChild(scoreRow);
@@ -1867,11 +1878,34 @@ const UNLOCK_PW_KEY = 'qf_unlock_pw';
 let _mixedUnlocked = false, _manifestLoadId = 0;
 let _protSalt = null;          /* base64 salt from public manifest.protected.kdf */
 let _protManifestUrl = null;   /* URL string from public manifest.protected.manifest */
+let _watchIds = new Set();     /* quiz ids with a watch-along (from the encrypted watch index) */
+let _protKeyMemo = null;       /* {pw, salt, key}: derive the key once per unlock */
+
+async function _protKey(pw) {
+  if (!_protKeyMemo || _protKeyMemo.pw !== pw || _protKeyMemo.salt !== _protSalt)
+    _protKeyMemo = { pw, salt: _protSalt, key: _qfeDeriveKey(pw, _protSalt, ['decrypt']) };
+  try { return await _protKeyMemo.key; }
+  catch (e) { _protKeyMemo = null; throw e; }
+}
+
+/* Quiz ids that have a watch-along. Any failure (no index yet, offline) means none. */
+async function _fetchWatchIds(pw) {
+  try {
+    const key = await _protKey(pw);
+    const r = await fetch('quizzes/protected/watch/index.enc?v=' + Date.now());
+    if (!r.ok) return new Set();
+    const idx = JSON.parse(new TextDecoder().decode(await _qfeDecrypt(await r.arrayBuffer(), key)));
+    return new Set((idx && Array.isArray(idx.watch) ? idx.watch : [])
+      .map(e => e && e.quiz_id).filter(id => typeof id === 'string'));
+  } catch (e) {
+    return new Set();
+  }
+}
 
 /* Try to load + decrypt the protected manifest. Throws on any failure. */
 async function _fetchProtectedManifest(pw) {
   if (!_protSalt || !_protManifestUrl) throw new Error('protected metadata not loaded');
-  const key = await _qfeDeriveKey(pw, _protSalt, ['decrypt']);
+  const key = await _protKey(pw);
   const r = await fetch(_protManifestUrl + '?v=' + Date.now());
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const buf = await r.arrayBuffer();
@@ -1890,6 +1924,7 @@ function _showLockControl(visible) {
 /* Clear qf_unlock_pw and re-render the page without protected content. */
 function lockSite() {
   _mixedUnlocked = false;
+  _watchIds = new Set(); _protKeyMemo = null;
   try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
   try { localStorage.removeItem(UNLOCK_PW_KEY); } catch(e) {}
   _showLockControl(false);
@@ -1902,6 +1937,7 @@ function lockSite() {
 window.addEventListener('storage', event => {
   if(event.key === null || (event.key === UNLOCK_PW_KEY && event.newValue !== event.oldValue)) {
     _mixedUnlocked = false;
+    _watchIds = new Set(); _protKeyMemo = null;
     try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
     document.getElementById('shipped-root').innerHTML = '';
     _showLockControl(false);
@@ -2004,7 +2040,9 @@ function loadManifest() {
         if (pw) {
           try {
             const pm = await _fetchProtectedManifest(pw);
+            const watchIds = await _fetchWatchIds(pw);
             if(loadId !== _manifestLoadId || store.get(UNLOCK_PW_KEY, '') !== pw) return;
+            _watchIds = watchIds;
             _mixedUnlocked = true;
             /* Protected Blocks contain existing Week groups; Demo stays public. */
             allSections = groupProtectedSections(pm.sections).concat(allSections);
