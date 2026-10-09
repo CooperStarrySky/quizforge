@@ -17,6 +17,7 @@
 }catch(e){}})();
 </script>
 <script src="anime.min.js" defer></script>
+<script src="labvalues.js" defer></script>
 <style>
 /* ════════════════════════════════════════════════════════════════════════
    Quiz Suite - Examplify-inspired
@@ -878,6 +879,17 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
   body.mixed-test .topbar{flex-wrap:wrap;height:auto;min-height:54px}
   body.mixed-test #qbar-tools{order:2;flex-basis:100%;max-width:100%;height:40px}
 }
+/* Lab Values button — Examplify skin: outlined pill at the right end of row 2 */
+[data-skin="examsoft"] #lab-btn{
+  grid-row:2;grid-column:6 / -1;justify-self:end;align-self:center;z-index:1;
+  color:var(--accent);background:transparent;
+  border:1.5px solid var(--accent);border-radius:999px;
+  text-transform:uppercase;font-size:.72rem;font-weight:700;letter-spacing:.05em;
+  padding:6px 14px;margin:0 16px 0 8px;height:34px;gap:6px;
+}
+[data-skin="examsoft"] #lab-btn:hover,
+[data-skin="examsoft"] #lab-btn.active{background:var(--accent-tint);color:var(--accent)}
+[data-skin="examsoft"] #lab-btn svg{width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -925,6 +937,10 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
     <button class="bar-btn flag-btn" id="flag-btn" onclick="toggleFlag()">
       <svg viewBox="0 0 20 20"><path d="M5 3v14"/><path d="M5 3h9l-1.6 3L14 9H5"/></svg>
       <span id="flag-label">Flag</span>
+    </button>
+    <button class="bar-btn lab-btn" id="lab-btn" onclick="toggleLabValues()" title="Lab values">
+      <svg viewBox="0 0 20 20"><path d="M8 3v5L4 15.5A1.5 1.5 0 005.3 17.7h9.4a1.5 1.5 0 001.3-2.2L12 8V3"/><path d="M7 3h6M6.5 12.5h7"/></svg>
+      <span>Lab Values</span>
     </button>
     <div class="tool-group">
       <button class="tool-icon-btn" id="highlight-btn" onclick="toggleHighlight()" title="Highlight (drag over question text)">
