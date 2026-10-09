@@ -176,6 +176,7 @@ svg{display:block}
 }
 .dropdown-item:hover{background:var(--paper)}
 .dropdown-item svg{width:16px;height:16px;stroke:var(--ink-2);fill:none;stroke-width:1.6;flex:none}
+.dropdown-item[hidden]{display:none}
 .dropdown-item.danger{color:var(--wrong)}
 .dropdown-item.danger:hover{background:var(--wrong-bg)}
 .dropdown-item.danger svg{stroke:var(--wrong)}
@@ -188,6 +189,7 @@ svg{display:block}
 .qnav-dot.is-flagged{background:var(--flag);border-color:var(--flag)}
 .qnav-dot.is-correct{background:var(--correct);border-color:var(--correct)}
 .qnav-dot.is-wrong{background:var(--wrong);border-color:var(--wrong)}
+.dropdown-item span+.qnav-dot{margin-left:auto}   /* trailing flag dot */
 
 /* ══ SETTINGS MENU ══ */
 .settings-menu{min-width:252px;padding:6px}
@@ -320,6 +322,10 @@ svg{display:block}
 #score-pct-label{font-family:var(--font-mono);color:rgba(255,255,255,.65);font-size:.9rem}
 .score-nav-hint{font-size:.78rem;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:7px;margin-left:24px}
 .score-nav-hint svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6}
+.sb-btn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;
+  font:600 .78rem var(--font-ui);padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.sb-btn:hover{background:rgba(255,255,255,.1)}
+@media(max-width:720px){.score-banner{padding:10px 14px;gap:12px}.score-nav-hint{display:none}}
 
 /* ══ BODY LAYOUT ══ */
 .body-layout{display:flex;flex:1;overflow:hidden}
@@ -339,10 +345,11 @@ svg{display:block}
     color .22s var(--ease),box-shadow .22s var(--ease),transform .22s var(--ease);
   border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface);
   position:relative;flex-shrink:0;transform:scale(1);
+  -webkit-appearance:none;appearance:none;padding:0;line-height:1;
 }
 .q-circle:hover{border-color:var(--accent);color:var(--accent)}
 .q-circle:hover:not(.current){transform:scale(1.05)}
-.q-circle.answered{background:var(--ink);border-color:var(--ink);color:#fff}
+.q-circle.answered{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .q-circle.current{border-color:var(--accent);box-shadow:var(--ring);transform:scale(1.06)}
 .q-circle.answered.current{background:var(--ink)}
 .q-circle.flagged-dot::after{
@@ -503,9 +510,12 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 .empty-state a:hover{background:var(--accent)}
 
 /* ══ TOAST ══ */
-#qhub-toast{position:fixed;right:16px;bottom:16px;z-index:99999;background:var(--correct);color:#fff;
+#qhub-toast{position:fixed;right:16px;bottom:72px;  /* above the footer, never over Next/Submit */
+  z-index:99999;background:var(--correct);color:#fff;
   padding:10px 14px;border-radius:8px;font:600 13px/1.3 var(--font-ui);
-  box-shadow:0 6px 20px rgba(20,24,33,.22);display:none}
+  box-shadow:0 6px 20px rgba(20,24,33,.22);display:none;pointer-events:none}
+#qhub-toast.info{background:var(--spine)}
+#qhub-toast.warn{background:var(--flag)}
 
 /* ══ RESPONSIVE ══ */
 @media(max-width:900px){
@@ -689,6 +699,7 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 /* No pulsing dot in examsoft */
 [data-skin="examsoft"] .timer-display::before{display:none}
 /* Countdown done: red */
+[data-skin="examsoft"] .timer-display.timer-warn{color:var(--flag)}
 [data-skin="examsoft"] .timer-display.timer-done{color:var(--wrong)}
 [data-skin="examsoft"] .timer-display.timer-done::before{display:none}
 
@@ -874,11 +885,6 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
   background:var(--accent);border-color:var(--accent);color:#fff;
 }
 
-/* Keep mixed-test controls reachable on phones without changing other quizzes. */
-@media(max-width:560px){
-  body.mixed-test .topbar{flex-wrap:wrap;height:auto;min-height:54px}
-  body.mixed-test #qbar-tools{order:2;flex-basis:100%;max-width:100%;height:40px}
-}
 /* Lab Values button — Examplify skin: outlined pill at the right end of row 2 */
 [data-skin="examsoft"] #lab-btn{
   grid-row:2;grid-column:6 / -1;justify-self:end;align-self:center;z-index:1;
@@ -890,6 +896,59 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 [data-skin="examsoft"] #lab-btn:hover,
 [data-skin="examsoft"] #lab-btn.active{background:var(--accent-tint);color:var(--accent)}
 [data-skin="examsoft"] #lab-btn svg{width:15px;height:15px}
+/* ══ NARROW SCREENS: every control stays on screen ══
+   Ledger ≤800px: the topbar wraps into two rows (brand + Review/Settings, then
+   the question tools). The tool row scrolls sideways only as a last resort. */
+@media(max-width:800px){
+  :root:not([data-skin="examsoft"]) .topbar{flex-wrap:wrap;height:auto;min-height:54px}
+  :root:not([data-skin="examsoft"]) .brand{height:52px}
+  :root:not([data-skin="examsoft"]) #qbar-tools{
+    order:2;flex:1 1 100%;max-width:100%;min-width:0;height:44px;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  :root:not([data-skin="examsoft"]) .timer-wrap{margin-left:auto}
+}
+/* Examplify ≤820px: the 8-column grid collapses to two plain rows.
+   Row 1 = brand · Exam Controls · Tool Kit; row 2 = all question tools + timer. */
+@media(max-width:820px){
+  [data-skin="examsoft"] .topbar{grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:56px 52px}
+  [data-skin="examsoft"] .brand{grid-column:1;padding:0 12px}
+  [data-skin="examsoft"] #exam-controls-dd{grid-column:2}
+  [data-skin="examsoft"] #settings-dd{grid-column:3}
+  [data-skin="examsoft"] #exam-controls-dd .tb-btn,
+  [data-skin="examsoft"] #settings-dd .tb-btn{padding:0 12px}
+  [data-skin="examsoft"] #qbar-tools{
+    display:flex;grid-row:2;grid-column:1 / -1;z-index:1;min-width:0;height:52px;
+    align-items:center;background:var(--surface);overflow-x:auto;
+  }
+  [data-skin="examsoft"] #filter-dd .bar-btn,
+  [data-skin="examsoft"] #q-nav-dd .q-dropdown-btn{height:52px}
+  [data-skin="examsoft"] #filter-dd .bar-btn{width:auto}
+  [data-skin="examsoft"] .tool-group{height:52px;flex-shrink:0}
+  [data-skin="examsoft"] #flag-btn,
+  [data-skin="examsoft"] #lab-btn{flex-shrink:0;margin:0 4px}
+  /* timer now sits on the white row: dark text */
+  [data-skin="examsoft"] .timer-wrap{margin-left:auto;padding:0 12px;flex-shrink:0}
+  [data-skin="examsoft"] .timer-label{color:var(--ink-3)}
+  [data-skin="examsoft"] .timer-display{color:var(--ink)}
+}
+/* Phones: icon-only lab button, no duplicate toolbar arrows (the footer has
+   Previous/Next), and footer buttons share the width instead of overflowing. */
+@media(max-width:560px){
+  #lab-btn span,#flag-label{display:none}
+  #filter-dd .bar-btn,[data-skin="examsoft"] #filter-dd .bar-btn{font-size:0;gap:3px}  /* icon + caret only */
+  .qd-word{display:none}                               /* "Question 12" -> "12" */
+  .tool-group{padding:0 4px}
+  [data-skin="examsoft"] .timer-wrap{padding:0 8px}
+  [data-skin="examsoft"] #filter-dd .bar-btn svg:first-child{display:block}
+  [data-skin="examsoft"] #flag-btn,[data-skin="examsoft"] #lab-btn{padding:6px 10px}
+  .timer-wrap{margin-right:4px}
+  #prev-arrow-btn,#next-arrow-btn{display:none}
+  #ef-version,[data-skin="examsoft"] #ef-version{display:none}
+  .ef-btns{flex:1}
+  .ef-btn,[data-skin="examsoft"] #ef-next{min-width:0;flex:1}
+  [data-skin="examsoft"] .timer-label{display:none}
+}
 </style>
 </head>
 <body>
@@ -906,7 +965,7 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
   </div>
   <div id="qbar-tools">
     <div class="dropdown" id="filter-dd">
-      <button class="bar-btn filter-btn" onclick="toggleDropdown('filter-dd')">
+      <button class="bar-btn filter-btn" onclick="toggleDropdown('filter-dd')" aria-label="Filter questions" title="Filter questions">
         <svg viewBox="0 0 20 20"><path d="M3 5h14l-5.5 6.5V16l-3-1.5v-3z"/></svg>
         Filter
         <svg viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M5 8l5 5 5-5"/></svg>
@@ -924,6 +983,10 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
           <svg class="ic-check" viewBox="0 0 20 20" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg>
           <span>Unanswered questions</span>
         </button>
+        <button class="dropdown-item" id="filter-wrong" onclick="setFilter('incorrect')" hidden>
+          <svg class="ic-check" viewBox="0 0 20 20" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg>
+          <span>Incorrect questions</span>
+        </button>
       </div>
     </div>
     <div class="dropdown" id="q-nav-dd">
@@ -934,7 +997,7 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
         <!-- populated by JS -->
       </div>
     </div>
-    <button class="bar-btn flag-btn" id="flag-btn" onclick="toggleFlag()">
+    <button class="bar-btn flag-btn" id="flag-btn" onclick="toggleFlag()" title="Flag question (F)" aria-pressed="false">
       <svg viewBox="0 0 20 20"><path d="M5 3v14"/><path d="M5 3h9l-1.6 3L14 9H5"/></svg>
       <span id="flag-label">Flag</span>
     </button>
@@ -970,9 +1033,13 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
         <svg viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M5 8l5 5 5-5"/></svg>
       </button>
       <div class="dropdown-menu" id="exam-controls-dd-menu">
-        <button class="dropdown-item" onclick="openEndModal()">
+        <button class="dropdown-item" id="end-exam-item" onclick="openEndModal()">
           <svg viewBox="0 0 20 20"><path d="M5 3h7l3 3v11H5z"/><path d="M12 3v3h3"/><path d="M7.5 11l1.6 1.6 3-3.4"/></svg>
-          <span id="end-exam-label">End &amp; submit exam</span>
+          <span id="end-exam-label">Submit quiz</span>
+        </button>
+        <button class="dropdown-item" id="retake-item" onclick="retakeQuiz()" hidden>
+          <svg viewBox="0 0 20 20"><path d="M4 10a6 6 0 106-6H6"/><path d="M8 1.5L5.5 4 8 6.5"/></svg>
+          <span id="retake-label">Retake quiz</span>
         </button>
         <div class="dropdown-divider"></div>
         <button class="dropdown-item" onclick="viewFlagged()">
@@ -982,6 +1049,10 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
         <button class="dropdown-item" onclick="openStatusModal()">
           <svg viewBox="0 0 20 20"><path d="M4 16V9M9 16V4M14 16v-5"/></svg>
           Question status
+        </button>
+        <button class="dropdown-item" onclick="openHelp()">
+          <svg viewBox="0 0 20 20"><rect x="2.5" y="5.5" width="15" height="9" rx="1.5"/><path d="M5.5 8.5h1M9.5 8.5h1M13.5 8.5h1M6.5 11.5h7"/></svg>
+          Keyboard shortcuts
         </button>
         <div class="dropdown-divider"></div>
         <a href="index.html" class="dropdown-item">
@@ -1060,6 +1131,7 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
     <svg viewBox="0 0 20 20"><path d="M17 10H3M7 6l-4 4 4 4"/></svg>
     Use the rail to review each answer
   </span>
+  <button class="sb-btn" type="button" onclick="retakeQuiz()">Retake quiz</button>
 </div>
 
 <!-- BODY -->
@@ -1105,7 +1177,7 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 <!-- EXAM FOOTER (both skins; Next doubles as Submit on the last question) -->
 <div id="exam-footer" aria-hidden="false">
   <span id="ef-count"></span><span id="ef-version">EXAMPLIFY VERSION 3M.5.0</span>
-  <span class="kbd-hint"><span><kbd>1</kbd>-<kbd>5</kbd> answer</span><span><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>F</kbd> flag</span></span>
+  <span class="kbd-hint"><span><kbd>1</kbd>-<kbd id="kbd-answer-max">5</kbd> answer</span><span><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>F</kbd> flag</span><span><kbd>?</kbd> shortcuts</span></span>
   <div class="ef-btns">
     <button class="ef-btn" id="ef-prev" onclick="navigate(-1)">Previous</button>
     <button class="ef-btn" id="ef-next" data-mode="next">Next</button>
@@ -1116,12 +1188,12 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
 <!-- END EXAM MODAL -->
 <div class="overlay" id="end-overlay" onclick="closeEndModal()">
   <div class="modal" onclick="event.stopPropagation()">
-    <h2>Submit exam?</h2>
+    <h2 id="end-title">Submit quiz?</h2>
     <p>Review your submission summary. Once submitted, answers cannot be changed.</p>
     <div class="stat-grid" id="stat-grid"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeEndModal()">Return to exam</button>
-      <button class="btn-danger" onclick="submitExam()">Submit exam</button>
+      <button class="btn-cancel" id="end-cancel" onclick="closeEndModal()">Return to quiz</button>
+      <button class="btn-danger" id="end-submit" onclick="submitExam()">Submit quiz</button>
     </div>
   </div>
 </div>
@@ -1134,6 +1206,25 @@ mark.hl{background:rgba(176,125,34,.22);border-radius:2px;padding:0 1px;color:in
     <div class="stat-grid" id="status-grid"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeStatusModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- KEYBOARD SHORTCUTS ("?") -->
+<div class="overlay" id="help-overlay" onclick="closeHelp()">
+  <div class="modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <h2 id="help-title">Keyboard shortcuts</h2>
+    <div class="stat-grid">
+      <div class="stat-row"><span class="stat-label">Pick an answer</span><span class="stat-val"><span id="help-num">1-5</span> or <span id="help-let">A-E</span></span></div>
+      <div class="stat-row"><span class="stat-label">Previous / next question</span><span class="stat-val">← / →</span></div>
+      <div class="stat-row"><span class="stat-label">Flag question</span><span class="stat-val">F</span></div>
+      <div class="stat-row"><span class="stat-label">Lab values</span><span class="stat-val">L</span></div>
+      <div class="stat-row"><span class="stat-label">Close menu or dialog</span><span class="stat-val">Esc</span></div>
+      <div class="stat-row"><span class="stat-label">Show this list</span><span class="stat-val">?</span></div>
+    </div>
+    <p>F always flags, so pick option F with 6.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeHelp()">Close</button>
     </div>
   </div>
 </div>
@@ -1507,8 +1598,9 @@ function _dash(s){
 const EASE_FN = 'cubicBezier(.22,1,.36,1)';
 const motionOK = () => !!window.anime && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const letters = ['A','B','C','D','E'];
+const letters = ['A','B','C','D','E','F','G','H','I','J'];
 let current    = 0;
+let _lastRenderedIndex = -1;   /* render() resets scroll only when this changes */
 /* selected / eliminated / flagged are sized to questions[] in initUI(), after
    the quiz is loaded (synchronously for ?id=, asynchronously for ?src=).
    Declaring them here so all downstream functions can close over them. */
@@ -1516,6 +1608,7 @@ let selected   = [];
 let eliminated = [];
 let flagged    = [];
 let revealed   = [];
+let highlights = [];   /* per question: [[start,end],...] character offsets into the stem text */
 let submitted  = false;
 let highlightMode  = false;
 let seconds = 0;
@@ -1532,23 +1625,42 @@ const ICON = {
 const timerEl = document.getElementById('timer');
 let _timerStarted = false;
 function _fmtTime(s){ return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+/* Elapsed time comes from wall-clock deltas, so a throttled background tab
+   still keeps correct time. _timerBase is re-derived whenever `seconds` is
+   set from outside (resume, retake). */
+let _timerBase = 0;
+let _countdownAlerts = {};   /* which Examplify warnings have fired this attempt */
+function setElapsed(s){ seconds = s; _timerBase = Date.now() - s * 1000; _countdownAlerts = {}; }
 function startTimer(){
   if(_timerStarted) return;
   _timerStarted = true;
-  setInterval(() => {
-    if (submitted) return;
-    seconds++;
-    if (skinOn()) {
-      const total = questions.length * 90;
-      const remaining = Math.max(0, total - seconds);
-      timerEl.textContent = _fmtTime(remaining);
-      if (remaining === 0 && !timerEl.classList.contains('timer-done')) {
-        timerEl.classList.add('timer-done');
-      }
-    } else {
-      timerEl.textContent = _fmtTime(seconds);
-    }
-  }, 1000);
+  _timerBase = Date.now() - seconds * 1000;
+  tickTimer();
+  setInterval(tickTimer, 1000);
+}
+function tickTimer(){
+  if (submitted || !questions.length) return;
+  seconds = Math.max(0, Math.floor((Date.now() - _timerBase) / 1000));
+  if (seconds % 5 === 0) saveProgress();
+  if (!skinOn()) { timerEl.textContent = _fmtTime(seconds); return; }
+  const total = questions.length * 90;
+  const remaining = Math.max(0, total - seconds);
+  timerEl.textContent = _fmtTime(remaining);
+  timerEl.classList.toggle('timer-warn', remaining > 0 && remaining <= 300);
+  timerEl.classList.toggle('timer-done', remaining === 0);
+  // Countdown alerts: a heads-up at 5:00 and 1:00, then the submit dialog at 0
+  // (the exam is never force-submitted).
+  if (remaining <= 300 && remaining > 60 && total > 300 && !_countdownAlerts.five) {
+    _countdownAlerts.five = true; notify('5 minutes remaining', 'warn');
+  }
+  if (remaining <= 60 && remaining > 0 && total > 60 && !_countdownAlerts.one) {
+    _countdownAlerts.one = true; notify('1 minute remaining', 'warn');
+  }
+  if (remaining === 0 && !_countdownAlerts.zero) {
+    _countdownAlerts.zero = true;
+    notify('Time is up. Submit when ready.', 'warn');
+    openEndModal();
+  }
 }
 
 // ── RENDER ──────────────────────────────────────────────────────────────
@@ -1562,15 +1674,21 @@ function render() {
 
   // Toolbar
   document.getElementById('q-dropdown-label').innerHTML =
-    `Question ${current+1} <svg class="chev" viewBox="0 0 20 20"><path d="M5 8l5 5 5-5"/></svg>`;
-  document.getElementById('prev-arrow-btn').disabled = current === 0;
-  document.getElementById('next-arrow-btn').disabled = current === questions.length - 1;
+    `<span class="qd-word">Question </span>${current+1} <svg class="chev" viewBox="0 0 20 20"><path d="M5 8l5 5 5-5"/></svg>`;
+  const hasPrev = stepIndex(-1) !== -1, hasNext = stepIndex(1) !== -1;   /* filter-aware */
+  document.getElementById('prev-arrow-btn').disabled = !hasPrev;
+  document.getElementById('next-arrow-btn').disabled = !hasNext;
 
   const fb = document.getElementById('flag-btn');
   fb.className = 'bar-btn flag-btn' + (flagged[current] ? ' flagged' : '');
+  fb.setAttribute('aria-pressed', String(!!flagged[current]));
   const skin = skinOn();
   const flagLabel = document.getElementById('flag-label');
   if (flagLabel) flagLabel.textContent = skin ? (flagged[current] ? 'Unflag Question' : 'Flag Question') : 'Flag';
+
+  // After submit the filter offers Incorrect in place of Unanswered
+  document.getElementById('filter-unseen').hidden = submitted;
+  document.getElementById('filter-wrong').hidden = !submitted;
 
   // Currently selected label
   const sel = selected[current];
@@ -1588,23 +1706,25 @@ function render() {
     ? `${current + 1} OF ${questions.length} QUESTIONS` : '';
   const efPrev = document.getElementById('ef-prev');
   const efNext = document.getElementById('ef-next');
-  const onLast = current === questions.length - 1;
-  if (efPrev) efPrev.disabled = current === 0;
+  if (efPrev) efPrev.disabled = !hasPrev;
   if (efNext) {
-    const submitMode = onLast && !submitted;
+    const submitMode = !hasNext && !submitted;
     efNext.dataset.mode = submitMode ? 'submit' : 'next';
     efNext.textContent = submitMode ? (skin ? 'Submit Exam' : 'Submit quiz') : 'Next';
-    efNext.disabled = onLast && submitted;
+    efNext.disabled = !hasNext && submitted;
   }
 
   // Question text (sanitized before innerHTML)
   const _qtEl = document.getElementById('question-text');
   _qtEl.innerHTML = sanitizeHtml(q.text, _isShipped ? 'shipped' : 'pasted');
+  _applyHighlights(_qtEl, highlights[current]);
   if (_isProtectedQuiz) _postProcessMedia(_qtEl); /* fire-and-forget: decrypts media async */
 
   // Answers range label (examsoft only; CSS hides it in ledger)
   const arDiv = document.getElementById('answers-range');
   if (arDiv) arDiv.textContent = `Answers: A - ${letters[q.options.length - 1]}`;
+  const kbdAns = document.getElementById('kbd-answer-max');
+  if (kbdAns) kbdAns.textContent = String(Math.min(q.options.length, 9));
 
   // Choices
   const container = document.getElementById('choices');
@@ -1714,14 +1834,23 @@ function render() {
   reviewLayout.classList.toggle('feedback-visible', showFeedback);
   mainContent.classList.toggle('feedback-visible', showFeedback);
 
-  // Scroll to top
-  mainContent.scrollTop = 0;
-  document.getElementById('question-pane').scrollTop = 0;
-  expBox.scrollTop = 0;
+  // Scroll to top only when the question changed; re-renders from answering,
+  // eliminating or flagging keep the reader's place.
+  if (current !== _lastRenderedIndex) {
+    mainContent.scrollTop = 0;
+    document.getElementById('question-pane').scrollTop = 0;
+    expBox.scrollTop = 0;
+    _lastRenderedIndex = current;
+  }
+
+  // Exam controls offer Submit before scoring and Retake after
+  document.getElementById('end-exam-item').hidden = submitted;
+  document.getElementById('retake-item').hidden = !submitted;
 
   updateSidebar();
   buildQNavMenu();
   updateProgress();
+  saveProgress();
 }
 
 function chooseAnswer(optionIndex) {
@@ -1755,15 +1884,11 @@ function buildTiles() {
   const container = document.getElementById('q-circles');
   container.innerHTML = '';
   qTiles = questions.map((_, qi) => {
-    const c = document.createElement('div');
+    const c = document.createElement('button');   /* real button: Tab + Enter/Space work */
+    c.type = 'button';
     c.className = 'q-circle';
     c.textContent = qi + 1;
-    c.addEventListener('click', () => {
-      const prev = current;
-      current = qi;
-      render();
-      if (qi !== prev) animateQuestionIn(Math.sign(qi - prev));
-    });
+    c.addEventListener('click', () => goTo(qi));
     container.appendChild(c);
     return c;
   });
@@ -1773,42 +1898,65 @@ function updateSidebar() {
   questions.forEach((_, qi) => {
     const c = qTiles[qi];
     // filter visibility
-    const hidden = (currentFilter === 'flagged'    && !flagged[qi]) ||
-                   (currentFilter === 'unanswered' && selected[qi] !== null);
-    c.style.display = hidden ? 'none' : '';
+    c.style.display = passesFilter(qi) ? '' : 'none';
     // state classes - toggled (not rebuilt) so the change transitions
     c.classList.toggle('current', qi === current);
+    c.classList.toggle('flagged-dot', !!flagged[qi]);   /* flags stay visible after reveal */
+    let state;
     if (submitted || revealed[qi]) {
       const right = selected[qi] === questions[qi].correct;
       c.classList.toggle('got-correct', right);
       c.classList.toggle('got-wrong', !right);
-      c.classList.remove('answered', 'flagged-dot');
+      c.classList.remove('answered');
+      state = right ? 'correct' : 'incorrect';
     } else {
       c.classList.toggle('answered', selected[qi] !== null);
-      c.classList.toggle('flagged-dot', !!flagged[qi]);
       c.classList.remove('got-correct', 'got-wrong');
+      state = selected[qi] !== null ? 'answered' : 'unanswered';
     }
+    c.setAttribute('aria-label', `Question ${qi + 1}, ${state}${flagged[qi] ? ', flagged' : ''}`);
+    if (qi === current) c.setAttribute('aria-current', 'true'); else c.removeAttribute('aria-current');
   });
 }
 
 let currentFilter = 'all';
 
+// One test shared by the rail and by Previous/Next, so stepping follows the filter.
+function passesFilter(qi) {
+  if (currentFilter === 'flagged')    return !!flagged[qi];
+  if (currentFilter === 'unanswered') return selected[qi] === null;
+  if (currentFilter === 'incorrect')  return selected[qi] !== questions[qi].correct;
+  return true;
+}
+// Next index in direction dir that passes the filter, or -1 when there is none.
+function stepIndex(dir) {
+  for (let i = current + dir; i >= 0 && i < questions.length; i += dir) {
+    if (passesFilter(i)) return i;
+  }
+  return -1;
+}
+
 function setFilter(f) {
   currentFilter = f;
   closeDropdown('filter-dd');
-  const map = { all:'filter-all', flagged:'filter-flag', unanswered:'filter-unseen' };
+  const map = { all:'filter-all', flagged:'filter-flag', unanswered:'filter-unseen', incorrect:'filter-wrong' };
   Object.entries(map).forEach(([k, id]) => {
     document.getElementById(id).classList.toggle('selected', k === f);
   });
-  updateSidebar();
+  if (questions.length) render(); else updateSidebar();   /* render refreshes Prev/Next too */
 }
 
 // ── NAVIGATION ──────────────────────────────────────────────────────────
 function navigate(dir) {
+  const next = stepIndex(dir < 0 ? -1 : 1);
+  if (next === -1) return;
+  goTo(next);
+}
+function goTo(qi) {
   const prev = current;
-  current = Math.max(0, Math.min(questions.length - 1, current + dir));
+  current = qi;
   render();
-  if (current !== prev) animateQuestionIn(dir);
+  if (qi !== prev) animateQuestionIn(Math.sign(qi - prev));
 }
 
 // Footer Next routes on data-mode: 'next' navigates, 'submit' opens the end modal.
@@ -1866,6 +2014,7 @@ function doHighlight() {
     span.className = 'hl';
     range.surroundContents(span);
     sel.removeAllRanges();
+    _captureHighlights();
   } catch(e) {}
 }
 
@@ -1875,6 +2024,50 @@ function clearHighlights() {
     const parent = m.parentNode;
     while (m.firstChild) parent.insertBefore(m.firstChild, m);
     parent.removeChild(m);
+  });
+  if (questions.length) { highlights[current] = []; saveProgress(); }
+}
+
+/* Highlights are kept as character offsets into the stem's text, not as HTML:
+   they survive navigation and reloads, need no second sanitizer pass, and never
+   copy protected question text into localStorage. */
+function _textNodes(root) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), out = [];
+  let n; while ((n = w.nextNode())) out.push(n);
+  return out;
+}
+function _captureHighlights() {
+  const root = document.getElementById('question-text'), segs = [];
+  let off = 0;
+  _textNodes(root).forEach(t => {
+    const len = t.nodeValue.length;
+    if (len && t.parentElement && t.parentElement.closest('mark.hl')) {
+      const last = segs[segs.length - 1];
+      if (last && last[1] >= off) last[1] = off + len; else segs.push([off, off + len]);
+    }
+    off += len;
+  });
+  highlights[current] = segs;
+  saveProgress();
+}
+function _applyHighlights(root, segs) {
+  if (!Array.isArray(segs) || !segs.length) return;
+  let off = 0;
+  _textNodes(root).forEach(t => {
+    const start = off, len = t.nodeValue.length;
+    off += len;
+    const hits = segs.map(([a, b]) => [Math.max(a, start) - start, Math.min(b, start + len) - start])
+                     .filter(([a, b]) => b > a);
+    // Wrap from the last hit backwards so earlier offsets stay valid on node t.
+    for (let i = hits.length - 1; i >= 0; i--) {
+      const [a, b] = hits[i];
+      if (b < t.nodeValue.length) t.splitText(b);
+      const mid = a > 0 ? t.splitText(a) : t;
+      const mark = document.createElement('mark');
+      mark.className = 'hl';
+      mid.parentNode.insertBefore(mark, mid);
+      mark.appendChild(mid);
+    }
   });
 }
 
@@ -1893,13 +2086,13 @@ function buildQNavMenu() {
     } else if (flagged[qi]) {
       dotClass = 'is-flagged';
     }
-    item.innerHTML = `<span class="qnav-dot ${dotClass}"></span><span>Question ${qi+1}</span>`;
+    // A flagged question keeps a second flag dot once its main dot shows another state.
+    const flagDot = flagged[qi] && dotClass !== 'is-flagged'
+      ? '<span class="qnav-dot is-flagged" title="Flagged"></span>' : '';
+    item.innerHTML = `<span class="qnav-dot ${dotClass}"></span><span>Question ${qi+1}</span>${flagDot}`;
     item.addEventListener('click', () => {
-      const prev = current;
-      current = qi;
       closeDropdown('q-nav-dd');
-      render();
-      if (qi !== prev) animateQuestionIn(Math.sign(qi - prev));
+      goTo(qi);
     });
     menu.appendChild(item);
   });
@@ -1957,14 +2150,10 @@ function closeEndModal() { document.getElementById('end-overlay').classList.remo
 // ── REVIEW MENU ACTIONS ───────────────────────────────────────────────────
 function viewFlagged() {
   closeDropdown('exam-controls-dd');
-  setFilter('flagged');
   const i = flagged.findIndex(Boolean);
-  if (i !== -1) {
-    const prev = current;
-    current = i;
-    render();
-    if (i !== prev) animateQuestionIn(Math.sign(i - prev));
-  }
+  if (i === -1) { notify('No flagged questions'); return; }  /* keep the rail as it was */
+  setFilter('flagged');
+  if (!flagged[current]) goTo(i);
 }
 function statusCounts() {
   const answered = selected.filter(s => s !== null).length;
@@ -2021,6 +2210,8 @@ function submitExam() {
   }
 
   timerEl.classList.add('done');
+  timerEl.classList.remove('timer-warn');
+  clearProgress();   /* the attempt is finished; the library no longer offers Resume */
 
   const firstWrong = questions.findIndex((q, qi) => selected[qi] !== q.correct);
   if (firstWrong !== -1) current = firstWrong;
@@ -2054,6 +2245,89 @@ function animateSubmitReveal() {
   unstickAfter([banner, ...rows, exp], 2000);
 }
 
+// ── RETAKE ────────────────────────────────────────────────────────────────────
+function retakeQuiz() {
+  closeDropdown('exam-controls-dd');
+  const msg = _mixedParam ? 'Start this test again with the same questions?'
+                          : 'Start this quiz again from scratch? Your last score stays saved.';
+  if (!confirm(msg)) return;
+  submitted = false;
+  resetAttemptState();
+  clearProgress();
+  document.getElementById('score-banner').classList.remove('visible');
+  timerEl.classList.remove('done', 'timer-done', 'timer-warn');
+  document.getElementById('answer-progress').style.display = '';
+  setFilter('all');     /* also re-renders */
+  tickTimer();
+  animateQuestionIn(0);
+}
+function resetAttemptState() {
+  selected   = new Array(questions.length).fill(null);
+  eliminated = questions.map(q => new Array(q.options.length).fill(false));
+  flagged    = new Array(questions.length).fill(false);
+  revealed   = new Array(questions.length).fill(false);
+  highlights = questions.map(() => []);
+  current = 0; _lastRenderedIndex = -1;
+  setElapsed(0);
+}
+
+// ── SAVED PROGRESS (resume after reload, Back, or Return to library) ─────────
+// One record per quiz, written on every render. Mixed tests are one-off random
+// samples, so they are never saved. Cleared on submit and on retake.
+let _progressReady = false;   /* no writes until initUI has restored or reset state */
+function progressKey() {
+  if (_mixedParam) return null;
+  if (_srcParam) return 'qf_progress::src::' + _srcParam;
+  if (_quizId)   return 'qf_progress::id::' + _quizId;
+  return null;
+}
+function saveProgress() {
+  const key = progressKey();
+  if (!key || !_progressReady || submitted || !questions.length) return;
+  try {
+    const answered = selected.filter(x => x !== null).length;
+    const touched = answered || current > 0 || flagged.some(Boolean) ||
+      eliminated.some(r => r.some(Boolean)) || highlights.some(h => h && h.length);
+    if (!touched) { localStorage.removeItem(key); return; }
+    localStorage.setItem(key, JSON.stringify({ v: 1, rev: _quizRevision, n: questions.length,
+      ts: Date.now(), answered, selected, eliminated, flagged, revealed, highlights, seconds, current }));
+  } catch(e) { /* storage full or blocked: the quiz still works */ }
+}
+function clearProgress() {
+  const key = progressKey();
+  if (key) try { localStorage.removeItem(key); } catch(e) {}
+}
+// Restores a saved attempt when it matches this quiz (same revision, count, and
+// option counts). Returns the number of answered questions, or -1 if none.
+function restoreProgress() {
+  const key = progressKey();
+  if (!key) return -1;
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+  const n = questions.length, arr = a => Array.isArray(a) && a.length === n;
+  if (!d || d.v !== 1 || d.n !== n || (d.rev ?? null) !== _quizRevision ||
+      !arr(d.selected) || !arr(d.eliminated) || !arr(d.flagged) || !arr(d.revealed)) {
+    if (d) clearProgress();
+    return -1;
+  }
+  selected   = d.selected.map((x, i) => Number.isInteger(x) && x >= 0 && x < questions[i].options.length ? x : null);
+  eliminated = questions.map((q, i) => q.options.map((_, j) => !!(Array.isArray(d.eliminated[i]) && d.eliminated[i][j])));
+  flagged    = d.flagged.map(Boolean);
+  revealed   = d.revealed.map((x, i) => !!x && selected[i] !== null);
+  highlights = questions.map((_, i) => (arr(d.highlights) && Array.isArray(d.highlights[i]) ? d.highlights[i] : [])
+    .filter(h => Array.isArray(h) && Number.isInteger(h[0]) && Number.isInteger(h[1]) && h[1] > h[0] && h[0] >= 0));
+  current = Number.isInteger(d.current) ? Math.max(0, Math.min(n - 1, d.current)) : 0;
+  setElapsed(Number.isFinite(d.seconds) && d.seconds > 0 ? Math.floor(d.seconds) : 0);
+  return selected.filter(x => x !== null).length;
+}
+window.addEventListener('beforeunload', e => {
+  saveProgress();
+  // Saved quizzes resume on return, so only warn when this attempt can't be saved (mixed tests).
+  if (progressKey() || !questions.length || submitted || !selected.some(x => x !== null)) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
 // ── SAVE ATTEMPT ──────────────────────────────────────────────────────────────
 // Shipped quizzes → qf_shipped_attempts (keyed by quiz id, includes revision)
 // Custom/pasted quizzes → qf_scores (existing key, unchanged)
@@ -2086,22 +2360,28 @@ function saveAttempt(correct, pct) {
   } catch(e) { /* storage unavailable - quiz still works */ }
 }
 
-function showToast(correct, total) {
+function showToast(correct, total) { notify(`Saved · ${correct}/${total}`, ''); }
+// Bottom-right toast. kind: '' (green, saved), 'info' (navy), 'warn' (amber).
+let _toastTimers = [];
+function notify(msg, kind) {
   const t = document.getElementById('qhub-toast');
   if (!t) return;
-  t.textContent = `Saved · ${correct}/${total}`;
+  _toastTimers.forEach(clearTimeout); _toastTimers = [];
+  if (window.anime) anime.remove(t);
+  t.className = kind || (kind === undefined ? 'info' : '');
+  t.textContent = msg;
   t.style.display = 'block';
   if (motionOK()) {
     anime({ targets: t, translateY: [12, 0], opacity: [0, 1], duration: 240, easing: EASE_FN });
     unstickAfter([t], 1000);
-    setTimeout(() => {
+    _toastTimers.push(setTimeout(() => {
       anime({ targets: t, opacity: [1, 0], duration: 300, easing: EASE_FN,
               complete: () => { t.style.display = 'none'; t.style.opacity = ''; t.style.transform = ''; } });
-    }, 4000);
+    }, 4000));
     /* backup hide in case the fade-out never completes */
-    setTimeout(() => { t.style.display = 'none'; t.style.opacity = ''; t.style.transform = ''; }, 5200);
+    _toastTimers.push(setTimeout(() => { t.style.display = 'none'; t.style.opacity = ''; t.style.transform = ''; }, 5200));
   } else {
-    setTimeout(() => { t.style.display = 'none'; }, 4000);
+    _toastTimers.push(setTimeout(() => { t.style.display = 'none'; }, 4000));
   }
 }
 
@@ -2117,22 +2397,48 @@ function reviewAnswers() {
 }
 
 // ── KEYBOARD ──────────────────────────────────────────────────────────────
+// Digits 1-9 and letters A-J pick an answer (capped by the option count).
+// F always flags, so option F is picked with 6. L toggles lab values.
 document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;   /* Cmd+C, Ctrl+F etc. belong to the browser */
+  if (e.target.closest && e.target.closest('input, textarea, select')) return;
+  const openOverlay = document.querySelector('.overlay.open');
+  if (e.key === 'Escape') {
+    const menus = document.querySelectorAll('.dropdown-menu.open');
+    if (openOverlay) openOverlay.classList.remove('open');
+    else if (menus.length) menus.forEach(m => m.classList.remove('open'));
+    else if (document.querySelector('#lab-panel.open') && window.toggleLabValues) toggleLabValues(false);
+    return;
+  }
+  if (openOverlay) return;                           /* a modal is up: no quiz shortcuts */
+  if (e.key === '?') { e.preventDefault(); openHelp(); return; }
   if (!questions.length) return;
-  if (e.target.closest('input, textarea')) return;
   const q = questions[current];
+  const k = e.key.toLowerCase();
   if (e.key === 'ArrowRight') { navigate(1); }
   else if (e.key === 'ArrowLeft') { navigate(-1); }
-  else if (e.key.toLowerCase() === 'f' && !submitted) { toggleFlag(); }
+  else if (k === 'f' && !submitted) { toggleFlag(); }
+  else if (k === 'l' && window.toggleLabValues) { toggleLabValues(); }
   else if (!submitted && !revealed[current]) {
     let i = -1;
     if (/^[1-9]$/.test(e.key)) i = +e.key - 1;
-    else if (/^[a-eA-E]$/.test(e.key)) i = 'abcde'.indexOf(e.key.toLowerCase());
+    else if (/^[a-j]$/.test(k)) i = 'abcdefghij'.indexOf(k);
     if (i >= 0 && i < q.options.length && !eliminated[current][i]) {
       chooseAnswer(i);
     }
   }
 });
+
+// ── SHORTCUT HELP ("?") ─────────────────────────────────────────────────────
+function openHelp() {
+  closeDropdown('exam-controls-dd');
+  const n = questions.length ? questions[current].options.length : 5;
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('help-num', '1-' + Math.min(n, 9));
+  set('help-let', 'A-' + letters[Math.max(0, n - 1)]);
+  document.getElementById('help-overlay').classList.add('open');
+}
+function closeHelp() { document.getElementById('help-overlay').classList.remove('open'); }
 
 // ── SETTINGS (theme / accent / text size) ────────────────────────────────
 const THEME_KEY = 'quizTheme', ACCENT_KEY = 'quizAccent', SCALE_KEY = 'quizTextScale', SKIN_KEY = 'quizSkin';
@@ -2213,7 +2519,11 @@ function applySkinChrome() {
   const brand = document.querySelector('.brand-mark'); if (brand) brand.textContent = on ? 'Examplify' : 'QuizForge';
   set('review-label',   on ? 'Exam Controls' : 'Review');
   set('settings-label', on ? 'Tool Kit'      : 'Settings');
-  set('end-exam-label', on ? 'Submit Exam'   : 'End & submit exam');
+  set('end-exam-label', on ? 'Submit Exam'   : 'Submit quiz');
+  set('end-title',      on ? 'Submit Exam?'  : 'Submit quiz?');
+  set('end-submit',     on ? 'Submit Exam'   : 'Submit quiz');
+  set('end-cancel',     on ? 'Return to Exam' : 'Return to quiz');
+  set('retake-label',   on ? 'Retake Exam'   : 'Retake quiz');
   // Re-render timer display for the active skin (countdown vs elapsed).
   // Derived from elapsed `seconds` so switching is always correct and corruption-free.
   if (timerEl && _timerStarted) {
@@ -2221,9 +2531,10 @@ function applySkinChrome() {
       const remaining = Math.max(0, questions.length * 90 - seconds);
       timerEl.textContent = _fmtTime(remaining);
       timerEl.classList.toggle('timer-done', remaining === 0);
+      timerEl.classList.toggle('timer-warn', remaining > 0 && remaining <= 300);
     } else {
       timerEl.textContent = _fmtTime(seconds);
-      timerEl.classList.remove('timer-done');
+      timerEl.classList.remove('timer-done', 'timer-warn');
     }
   }
 }
@@ -2267,6 +2578,7 @@ function setSkin(v)   { _ls.set(SKIN_KEY, v); applySettings(); if (questions.len
     else if (e.key === 'End') next = REVIEW_PANE_MAX;
     else return;
     e.preventDefault();
+    e.stopPropagation();   /* ArrowLeft/Right resize here; they must not also change question */
     setReviewPanePercent(next);
   });
 })();
@@ -2298,16 +2610,16 @@ function initUI() {
   if (questions.length) {
     /* Reinitialize per-question state arrays now that questions[] is final.
        This runs for both ?id= (sync) and ?src= (async) paths. */
-    selected   = new Array(questions.length).fill(null);
-    eliminated = questions.map(q => new Array(q.options.length).fill(false));
-    flagged    = new Array(questions.length).fill(false);
-    revealed   = new Array(questions.length).fill(false);
+    resetAttemptState();
+    const resumed = restoreProgress();
+    _progressReady = true;
     qTiles     = null; /* force sidebar tile rebuild for the loaded question set */
     document.title = _dash(_quizTitle) + ' · QuizForge';
     document.getElementById('topbar-title').textContent = _dash(_quizSubtitle);
     startTimer();
     render();
     primeLoadIn();
+    if (resumed > 0) notify(`Resumed · ${resumed}/${questions.length} answered`);
   } else {
     document.title = 'No quiz loaded · QuizForge';
     showEmptyState();

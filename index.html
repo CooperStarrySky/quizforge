@@ -1001,6 +1001,18 @@ const EASE_FN = 'cubicBezier(.22,1,.36,1)';
 const motionOK = () => !!window.anime && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* Build a single quiz card element. */
+/* In-progress attempt saved by quiz.html (qf_progress::id::<id> or ::src::<file>). */
+function savedProgress(kind, ref){
+  try{
+    const d = JSON.parse(localStorage.getItem('qf_progress::' + kind + '::' + ref));
+    return d && d.v === 1 && Number.isInteger(d.answered) && Number.isInteger(d.n) ? d : null;
+  }catch(e){ return null; }
+}
+function takeLabel(prog){
+  return (prog ? 'Resume · ' + prog.answered + '/' + prog.n + ' answered ' : 'Take ') +
+    '<svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>';
+}
+
 function buildCard(qz, scores){
   const atts = attemptsFor(qz.id, scores);
   const last = atts.length ? atts[atts.length - 1] : null;
@@ -1046,8 +1058,8 @@ function buildCard(qz, scores){
     '<div class="rows">' +
       '<div class="row"><div class="qscore">' + scoreHtml + '</div></div>' +
       '<div class="row actions-row">' +
-        '<a class="take" href="quiz.html?id=' + encodeURIComponent(qz.id) + '">Take ' +
-          '<svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg></a>' +
+        '<a class="take" href="quiz.html?id=' + encodeURIComponent(qz.id) + '">' +
+          takeLabel(savedProgress('id', qz.id)) + '</a>' +
         '<button class="mini-btn" data-act="export">Export</button>' +
         '<button class="mini-btn danger spacer" data-act="delete">Delete</button>' +
       '</div>' +
@@ -1460,6 +1472,7 @@ function confirmDelete(){
   const finish = () => {
     setQuizzes(getQuizzes().filter(q => q.id !== id));
     setScores(getScores().filter(s => !s || s.quizId !== id));
+    try { localStorage.removeItem('qf_progress::id::' + id); } catch(e) {}  /* drop any half-done attempt */
     renderLibrary();
   };
   const el = document.querySelector('.lec[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
@@ -1670,7 +1683,7 @@ function buildShippedCard(entry, allAttempts) {
   takeLink.className = 'take';
   takeLink.href = 'quiz.html?src=' + encodeURIComponent(entry.file);
   /* innerHTML safe: all content is hardcoded, not manifest-derived */
-  takeLink.innerHTML = 'Take <svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>';
+  takeLink.innerHTML = takeLabel(savedProgress('src', entry.file)); /* numbers only */
 
   const actionsRow = document.createElement('div');
   actionsRow.className = 'row actions-row';
@@ -1829,26 +1842,6 @@ function showShippedBanner(msg) {
   el.classList.add('visible');
 }
 
-/* Fetch and render the shipped quiz manifest.
-   Skips silently on file:// (CORS would fail anyway).
-   Shows a visible warning on any failure. */
-function loadManifest() {
-  if(location.protocol === 'file:') return;
-  fetch('quizzes/manifest.json?v=' + Date.now())
-    .then(r => {
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(data => {
-      if(!data || data.schema_version !== 1 || !Array.isArray(data.sections))
-        throw new Error('invalid manifest schema');
-      renderShippedSections(data.sections);
-    })
-    .catch(err => {
-      showShippedBanner('Shipped quizzes unavailable — ' + (err && err.message ? err.message : 'fetch failed'));
-    });
-}
-
 /* ── QFE1 Crypto helper (duplicated inline; identical to quiz.html) ─────���────
    _qfeDeriveKey(passphrase, saltB64, usage?) → Promise<CryptoKey>
    _qfeDecrypt(buf, key) → Promise<ArrayBuffer>  */
@@ -1978,7 +1971,7 @@ async function attemptUnlock() {
   });
 })();
 
-/* ── Shipped-quiz manifest loader (replaces the original loadManifest) ───────
+/* ── Shipped-quiz manifest loader ─────────────────────────────────────────────
    Loads the public manifest (always).
    If manifest.protected exists and qf_unlock_pw is set: tries to also load
    the encrypted protected manifest and prepends its sections.
@@ -2047,6 +2040,14 @@ window.addEventListener('hashchange', () => {
   document.querySelector(location.hash === '#create' ? '#create-title' : '#lib-col h1').focus();
 });
 
+/* Coming back with the browser's Back button can restore this page from the
+   back-forward cache; redraw so Resume labels match the latest saved progress. */
+window.addEventListener('pageshow', e => {
+  if(!e.persisted) return;
+  renderLibrary();
+  loadManifest();
+});
+
 /* ── Init ── */
 showHomeView();
 seedIfNeeded();
@@ -2084,20 +2085,22 @@ function unstickAfter(els, ms){
 try{
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
     loadInTargets().forEach(el => el.classList.add('pre-anim'));
-    setTimeout(clearPreAnim, 1500); /* safety net: never leave content hidden */
+    setTimeout(clearPreAnim, 700); /* safety net: never leave content hidden */
   }
 }catch(e){ clearPreAnim(); }
-window.addEventListener('load', () => {
+/* Runs at DOMContentLoaded (deferred anime.min.js has executed by then) rather
+   than window 'load', so the page never sits blank while other assets finish. */
+document.addEventListener('DOMContentLoaded', () => {
   if(!motionOK()){ clearPreAnim(); return; }
   const els = loadInTargets();
   /* if the safety net already revealed the page (very slow load), don't re-hide it */
   if(!els.some(el => el.classList.contains('pre-anim'))) return;
   anime.set(els, { opacity: 0 });  /* inline value takes over before the class goes */
   clearPreAnim();
-  anime({ targets: els, translateY: [14, 0], opacity: [0, 1], duration: 420,
-          delay: anime.stagger(45), easing: EASE_FN,
+  anime({ targets: els, translateY: [8, 0], opacity: [0, 1], duration: 260,
+          delay: anime.stagger(30), easing: EASE_FN,   /* ≤ 320ms total */
           complete: () => els.forEach(el => { el.style.opacity = ''; el.style.transform = ''; }) });
-  unstickAfter(els, 2500);
+  unstickAfter(els, 1200);
 });
 </script>
 </body>
