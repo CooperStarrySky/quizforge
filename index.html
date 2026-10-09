@@ -584,6 +584,12 @@ function esc(s){
 }
 /* Chrome dash convention: em/en dashes become plain hyphens in titles shown in UI chrome.
    Question and explanation content is never touched. */
+/* Subtitle + question count, without repeating a count the subtitle already states. */
+function metaLine(subtitle, n) {
+  const count = n + ' question' + (n === 1 ? '' : 's');
+  if (!subtitle) return count;
+  return /\b\d+\s+questions?\b/i.test(subtitle) ? dash(subtitle) : dash(subtitle) + ' · ' + count;
+}
 function dash(s){
   return String(s).replace(/\u2014/g, '-').replace(/\u2013/g, '-');
 }
@@ -1147,7 +1153,7 @@ function renderDemo(){
     sec.quizzes.filter(q => q && q.id && q.file).forEach(entry => {
       const lec = normalizeEntry(entry, attempts);
       list.appendChild(buildRow({ title: dash(entry.title || entry.id), num: String(lec.quiz.n),
-        meta: [entry.subtitle ? dash(entry.subtitle) : null, lec.quiz.n + ' questions'].filter(Boolean).join(' · '),
+        meta: metaLine(entry.subtitle, lec.quiz.n),
         quiz: lec.quiz, progressRef: 'src::' + entry.file, data: { shippedId: entry.id } }));
     });
     wrap.appendChild(list);
@@ -1232,7 +1238,7 @@ function buildCard(qz, scores){
   const menu = [{ label: 'Export', run: () => exportQuiz(qz.id) }].concat(moves.length ? [{ sep: true }] : [], moves,
     [{ sep: true }, { label: 'Delete', danger: true, run: () => openDeleteModal(qz.id, qz.title) }]);
   const row = buildRow({ title: dash(qz.title), num: String(n), quiz, menu, progressRef: 'id::' + qz.id,
-    meta: [qz.subtitle ? dash(qz.subtitle) : null, n + ' question' + (n === 1 ? '' : 's')].filter(Boolean).join(' · '),
+    meta: metaLine(qz.subtitle, n),
     data: { id: qz.id } });
   row.classList.add('is-custom');
   /* Drag handle: the number badge doubles as the grip (mouse only; menus cover keyboard moves). */
