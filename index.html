@@ -719,7 +719,7 @@ function parseQuizId(id){
 function blockName(slug){
   return slug === 'other' ? 'Other quizzes' : slug.replace(/-/g, ' ').toUpperCase();
 }
-/* "Lec 16 — Pneumoconiosis" → "Pneumoconiosis" (number shows in the badge). */
+/* "Lec 16 — Sample Topic" → "Sample Topic" (number shows in the badge). */
 function stripLecPrefix(title){
   const t = String(title || '');
   const s = t.replace(/^\s*(?:lec(?:ture)?\.?\s*\d+[a-z]?|lab)\s*[—–:|·-]\s*/i, '').trim();

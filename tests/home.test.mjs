@@ -10,9 +10,9 @@ const DEMO = { id: 'demo', name: 'Demo', quizzes: [{ id: 'qf-demo', title: 'Samp
 /* Publish order: odd ids first, then cardio, then pulm (so pulm is "latest"). */
 const SECTIONS = [
   { id: 'legacy', name: 'Review', quizzes: [entry('legacy-quiz'), entry('neuro-psych-w01-a', 'Odd id')] },
-  { id: 'week-01', name: 'Week 01', quizzes: [entry('cardio-w01-lec01', 'Lec 1 — Heart Anatomy'), entry('cardio-w01-labembryo', 'Embryology Lab')] },
+  { id: 'week-01', name: 'Week 01', quizzes: [entry('cardio-w01-lec01', 'Lec 1 — Sample Topic'), entry('cardio-w01-labembryo', 'Sample Lab A')] },
   { id: 'week-02', name: 'Week 02', quizzes: [entry('cardio-w02-lec07')] },
-  { id: 'pulm-01', name: 'Week 01', quizzes: [entry('pulm-w03-labhisto', 'Histology Lab'), entry('pulm-w03-lec16', 'Lec 16 — Pneumoconiosis', 15), entry('pulm-w01-lec02')] }
+  { id: 'pulm-01', name: 'Week 01', quizzes: [entry('pulm-w03-labhisto', 'Sample Lab B'), entry('pulm-w03-lec16', 'Lec 16 — Sample Topic', 15), entry('pulm-w01-lec02')] }
 ];
 const quiz = { title: 'Import fixture', questions: [{ text: 'Choose A.', options: ['A', 'B'], correct: 0, explanation: 'A.', citation: 'Fixture' }] };
 const wait = (ms = 20) => new Promise(r => setTimeout(r, ms));
@@ -94,7 +94,7 @@ test('unlock: Current = block first seen last in manifest order, Archive = the r
     const wk3 = $(cur, 'details.qf-week[data-week="3"]');
     assert.deepEqual($$(wk3, '.qf-lec').map(r => r.dataset.key), ['pulm-w03-lec16', 'pulm-w03-labhisto'], 'labs after lectures');
     assert.deepEqual($$(wk3, '.qf-lec__num').map(n => n.textContent), ['16', 'LAB']);
-    assert.equal($(wk3, '.qf-lec__title').textContent, 'Pneumoconiosis', 'Lec prefix stripped');
+    assert.equal($(wk3, '.qf-lec__title').textContent, 'Sample Topic', 'Lec prefix stripped');
     assert.match($(wk3, '.qf-lec__meta').textContent, /Week 3 · Lecture · 15 questions/);
     assert.equal(wk3.open, true, 'newest week starts open');
     const primary = $(wk3, '[data-act="primary"]');
@@ -196,7 +196,7 @@ test('Continue card: newest unfinished quiz, dismiss hides it until the next act
     await unlock(dom);
     win.localStorage.setItem('qf_progress::src::quizzes/protected/pulm-w03-lec16.r1.enc', JSON.stringify({ v: 1, n: 15, answered: 2, ts: 300 }));
     win.renderAll();
-    assert.match($(doc, '#resume-root').textContent, /PULM · Lec 16 Pneumoconiosis/);
+    assert.match($(doc, '#resume-root').textContent, /PULM · Lec 16 Sample Topic/);
     const row = $(doc, '#panel-current .qf-lec[data-key="pulm-w03-lec16"]');
     assert.equal(row.dataset.state, 'progress');
     assert.match(row.textContent, /2\/15 answered/);
@@ -212,7 +212,7 @@ test('archive filter matches title or number, opens matches, and reports no matc
     assert.equal($(doc, '#panel-archive').hidden, false);
     const f = $(doc, '#archive-filter');
     assert.ok(f);
-    f.value = 'embryo'; f.dispatchEvent(new win.Event('input'));
+    f.value = 'lab a'; f.dispatchEvent(new win.Event('input'));
     const shownRows = $$(doc, '#panel-archive .qf-lec').filter(r => !r.hidden && !r.closest('[hidden]'));
     assert.deepEqual(shownRows.map(r => r.dataset.key), ['cardio-w01-labembryo']);
     assert.equal($(doc, '#panel-archive details.qf-block[data-block="cardio"]').open, true);
