@@ -16,601 +16,254 @@
   d.setAttribute('data-theme', r);
 }catch(e){}})();
 </script>
-<script src="anime.min.js" defer></script>
+<link rel="stylesheet" href="qf-design.css">
 <style>
-/* ════════════════════════════════════════════════════════════════════════
-   QuizForge - "The Clinical Ledger" (shared with the quiz player + hub)
-   Graphite ink on cool paper · one petrol accent · serif reading column.
-   System fonts only. Fully self-contained (inline CSS/JS, no network).
-   ════════════════════════════════════════════════════════════════════════ */
-:root{
-  /* ── EXAMPLIFY THEME: flat, light, credible ── */
-  --font-read:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --ease:cubic-bezier(.22,1,.36,1);
-  --cscale:1;
-  --accent-base:#1f6db5;
-
-  /* ── LIGHT (Examplify default) ── */
-  --paper:#f6f7f9; --surface:#ffffff;
-  --ink:#202733; --ink-2:#586273; --ink-3:#687487;
-  --line:#dde2e8; --line-strong:#c3cad3;
-  --spine:#1c2e4a;
-  --correct:#2e7d4f; --correct-bg:#e9f4ee;
-  --wrong:#b3402e;   --wrong-bg:#fbece8;
-  --flag:#b07d22;    --flag-bg:#fbf4e6;
-  /* aliases used by the ported hub-card components */
-  --good:#2e7d4f; --good-bg:#e9f4ee; --bad:#b3402e; --bad-bg:#fbece8; --warn:#b07d22;
-  --sh-menu:0 6px 20px rgba(20,24,33,.10);
-  --sh-modal:0 18px 50px rgba(20,24,33,.20);
-  --overlay:rgba(20,24,33,.42);
-  --accent:var(--accent-base);
-  --accent-hover:color-mix(in srgb, var(--accent-base), #000 16%);
-  --accent-tint:color-mix(in srgb, var(--accent-base) 13%, var(--surface));
-  --ring:0 0 0 3px color-mix(in srgb, var(--accent-base) 30%, transparent);
-}
-/* ── ACCENT CHOICES ── */
-:root[data-accent="examplify"]{--accent-base:#1f6db5}
-:root[data-accent="ocean"]{--accent-base:#1f6f8b}
-:root[data-accent="indigo"]{--accent-base:#4f4bd0}
-:root[data-accent="violet"]{--accent-base:#7350c9}
-:root[data-accent="slate"]{--accent-base:#506087}
-/* ── DARK THEME ── */
-:root[data-theme="dark"]{
-  --paper:#14161b; --surface:#1c1f26;
-  --ink:#e6e9ef; --ink-2:#abb4c2; --ink-3:#9aa5b5;
-  --line:#2a2e37; --line-strong:#3a3f4a;
-  --spine:#0f1115;
-  --correct:#5cc298; --correct-bg:#15271f;
-  --wrong:#e0795f;   --wrong-bg:#2c1a16;
-  --flag:#d8a33f;    --flag-bg:#2a2212;
-  --good:#5cc298; --good-bg:#15271f; --bad:#e0795f; --bad-bg:#2c1a16; --warn:#d8a33f;
-  --sh-menu:0 8px 24px rgba(0,0,0,.5);
-  --sh-modal:0 20px 56px rgba(0,0,0,.62);
-  --overlay:rgba(0,0,0,.62);
-  --accent:color-mix(in oklab, var(--accent-base), white 30%);
-  --accent-hover:color-mix(in srgb, var(--accent), white 14%);
-  --accent-tint:color-mix(in srgb, var(--accent) 22%, var(--surface));
-  --ring:0 0 0 3px color-mix(in srgb, var(--accent) 38%, transparent);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body,.topbar,.card,.lec,.dropdown-menu,.step,.prompt-box,.paste-area{
-  transition:background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
-body{
-  font-family:var(--font-ui);background:var(--paper);color:var(--ink);
-  min-height:100dvh;-webkit-font-smoothing:antialiased;line-height:1.55;
-}
-svg{display:block}
-a{color:inherit;text-decoration:none}
-:focus-visible{outline:none;box-shadow:var(--ring);border-radius:4px}
-button:active,.take:active{transform:translateY(1px)}
-
-/* ══ TOPBAR KEYLINE + TEXT SELECTION ══ */
-
-::selection{background:color-mix(in srgb, var(--accent) 24%, transparent)}
-
-/* ══ TOP BAR (matches player topbar) ══ */
-.topbar{
-  background:var(--surface);color:var(--ink);min-height:68px;position:sticky;top:0;z-index:30;
-  display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px max(24px,calc((100vw - 1120px)/2));
-  border-bottom:1px solid var(--line);
-}
-.brand{display:flex;align-items:center;gap:14px;min-width:0}
-.brand-mark{font-size:1.15rem;font-weight:750;letter-spacing:-.045em;color:var(--ink);white-space:nowrap}
-.topbar-right{display:flex;align-items:center;gap:6px}
-.tb-btn{
-  background:transparent;border:1px solid var(--line);color:var(--ink-2);
-  font-family:var(--font-ui);font-size:.8rem;font-weight:500;white-space:nowrap;
-  padding:7px 13px;border-radius:6px;cursor:pointer;
-  display:flex;align-items:center;gap:7px;transition:background .14s var(--ease),border-color .14s var(--ease);
-}
-.tb-btn:hover{background:var(--paper);border-color:var(--line-strong)}
-.tb-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;opacity:.85}
-
-/* ══ SETTINGS DROPDOWN ══ */
-.dropdown{position:relative;display:flex;align-items:stretch}
-.dropdown-menu{
-  display:none;position:absolute;top:calc(100% + 8px);right:0;
-  background:var(--surface);border:1px solid var(--line);border-radius:10px;
-  min-width:218px;box-shadow:var(--sh-menu);z-index:200;overflow:hidden;padding:5px;
-}
-.dropdown-menu.open{display:block}
-.settings-menu{min-width:252px;padding:6px}
-.set-group{padding:10px 6px}
-.set-group+.set-group{border-top:1px solid var(--line)}
-.set-label{font-size:.66rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin-bottom:9px}
-.seg{display:flex;gap:3px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px}
-.seg-btn{flex:1;border:none;background:none;font-family:var(--font-ui);font-size:.78rem;font-weight:500;
-  color:var(--ink-2);padding:6px 6px;border-radius:6px;cursor:pointer;transition:background .12s,color .12s}
-.seg-btn:hover{color:var(--ink)}
-.seg-btn.active{background:var(--surface);color:var(--ink);box-shadow:var(--sh-menu);font-weight:600}
-.swatches{display:flex;gap:10px;padding:1px 2px}
-.sw{width:25px;height:25px;border-radius:50%;border:none;background:var(--sw);cursor:pointer;padding:0;
-  transition:transform .12s var(--ease),box-shadow .12s;outline:none}
-.sw:hover{transform:scale(1.09)}
-.sw.active{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--sw)}
-.sw:focus-visible{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--sw)}
-.size-readout{float:right;font-family:var(--font-mono);font-size:.66rem;color:var(--ink-2);letter-spacing:0;text-transform:none}
-.slider-row{display:flex;align-items:center;gap:11px}
-.slider-a{font-family:var(--font-read);color:var(--ink-3);line-height:1;user-select:none}
-.slider-a-sm{font-size:.82rem}
-.slider-a-lg{font-size:1.22rem}
-.size-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
-  background:var(--line-strong);outline:none;cursor:pointer}
-.size-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;
-  background:var(--accent);border:2px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
-.size-slider::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);cursor:pointer}
-.size-slider:focus-visible{box-shadow:var(--ring)}
-
-/* ══ PAGE ══ */
-.wrap{max-width:1120px;margin:0 auto;padding:0 24px 64px}
-[hidden]{display:none!important}
-.view-nav{display:flex;gap:4px;margin-right:auto}
-.view-nav a{padding:8px 14px;border-radius:7px;color:var(--ink-2);font-size:.85rem;font-weight:600}
-.view-nav a:hover{background:var(--paper);color:var(--ink)}
-.view-nav a[aria-current="page"]{background:var(--accent-tint);color:var(--accent)}
-
-/* question-count slider */
-.qcount-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.qcount-slider{max-width:180px}
-.qcount-readout{font-family:var(--font-mono);font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums;min-width:9ch}
-.qcount-readout b{color:var(--ink);font-weight:600}
-
-/* pre-animation state: only ever added by JS right before animating in */
-.pre-anim{opacity:0}
-
-/* cards */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 24px}
-#sec-prompt .card{padding:12px}  /* the prompt card hugs its block */
-.prompt-wrap{position:relative}
-.prompt-wrap .copy-btn{position:absolute;top:12px;right:18px;z-index:1}  /* right inset clears the scrollbar */
-.prompt-wrap::after{
-  content:"";position:absolute;left:1px;right:1px;bottom:1px;height:28px;pointer-events:none;
-  border-radius:0 0 10px 10px;
-  background:linear-gradient(to bottom, transparent, var(--paper));
-}
-.prompt-box{
-  font-family:var(--font-mono);font-size:.8rem;line-height:1.6;color:var(--ink);
-  background:var(--paper);border:1px solid var(--line);border-radius:10px;
-  padding:16px 18px 34px;max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word;
-  scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
-}
-.prompt-box::-webkit-scrollbar{width:8px}
-.prompt-box::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
-.prompt-box::-webkit-scrollbar-track{background:transparent}
-/* buttons */
-.btn{font-family:var(--font-ui);font-size:.86rem;font-weight:600;cursor:pointer;
-  border-radius:7px;padding:9px 16px;border:1px solid transparent;transition:background .13s var(--ease),border-color .13s}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
-.btn-ghost{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
-.btn-ghost:hover{border-color:var(--ink-3)}
-.btn-ghost.danger{color:var(--wrong)}
-.btn-ghost.danger:hover{border-color:var(--wrong);background:var(--wrong-bg)}
-.copy-btn.copied{background:var(--correct);border-color:var(--correct)}
-
-/* paste */
-.paste-area{
-  width:100%;min-height:158px;resize:vertical;font-family:var(--font-mono);font-size:.82rem;line-height:1.55;
-  color:var(--ink);background:var(--paper);border:1px solid var(--line-strong);border-radius:10px;padding:14px 15px;
-  outline:none;transition:border-color .14s,box-shadow .14s;
-}
-.paste-area::placeholder{color:var(--ink-3)}
-.paste-area:focus{border-color:var(--accent);box-shadow:var(--ring)}
-.paste-actions{display:flex;align-items:center;gap:14px;margin-top:13px;flex-wrap:wrap}
-.status{font-size:.85rem;line-height:1.45;font-weight:500;display:none}
-.status.show{display:block}
-.status.err{color:var(--wrong)}
-.status.ok{color:var(--correct)}
-
-/* ══ LIBRARY CARDS (ported from the hub .lec component) ══ */
-.lec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:15px;margin-top:16px}
-.lec{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;
-  transition:transform .14s var(--ease),border-color .14s,box-shadow .18s}
-.lec::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
-  transform:scaleY(0);transform-origin:top;transition:transform .22s var(--ease);z-index:1}
-.lec:hover::before{transform:scaleY(1)}
-.lec:hover{transform:translateY(-2px);border-color:var(--line-strong);box-shadow:0 10px 28px rgba(20,24,33,.09)}
-:root[data-theme="dark"] .lec:hover{box-shadow:0 10px 28px rgba(0,0,0,.38)}
-.lec.flash{border-color:var(--accent)}
-.lec-head{display:flex;align-items:flex-start;gap:13px;padding:15px 17px;border-bottom:1px solid var(--line)}
-.badge{flex:none;min-width:30px;height:30px;padding:0 8px;border-radius:8px;display:grid;place-items:center;
-  font-family:var(--font-mono);font-weight:600;font-size:.82rem;font-variant-numeric:tabular-nums;
-  color:var(--accent);background:var(--accent-tint)}
-.lec-title{flex:1;min-width:0}
-.q-title{font-size:.95rem;font-weight:600;line-height:1.3;color:var(--ink)}
-.q-sub{font-size:.8rem;color:var(--ink-2);margin-top:3px;line-height:1.35;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:5px}
-.dot-good{background:var(--good)}
-.dot-warn{background:var(--warn)}
-.dot-none{background:var(--line-strong)}
-.rows{padding:5px 8px 9px}
-.row{display:flex;align-items:center;gap:12px;padding:11px 9px;border-radius:9px;flex-wrap:wrap}
-.row+.row{border-top:1px solid var(--line)}
-.qscore{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.pills{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.pill{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
-.p-good{background:var(--good-bg);color:var(--good)}
-.p-bad{background:var(--bad-bg);color:var(--bad)}
-.p-last{outline:2px solid currentColor;outline-offset:1px}
-.best{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.4px}
-.noatt{font-size:12px;color:var(--ink-3);font-style:italic;font-family:var(--font-read)}
-/* Four buttons have to survive a 3-column card, so this row runs tighter than
-   the score row above it and keeps its own padding. */
-.actions-row{gap:6px;padding-left:7px;padding-right:7px}
-.take{flex:none;font-weight:600;font-size:13px;color:#fff;background:var(--spine);
-  padding:8px 15px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
-  cursor:pointer;transition:background .12s}
-.take:hover{background:var(--accent)}
-.take-watch{background:var(--surface);color:var(--ink);border:1px solid var(--line-strong)}
-.take-watch:hover{background:var(--accent-tint);border-color:var(--accent)}
-.take svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;transition:transform .15s var(--ease)}
-.take:hover svg{transform:translateX(2px)}
-.mini-btn{font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
-  background:var(--surface);border:1px solid var(--line-strong);color:var(--ink);border-radius:7px;padding:7px 10px;
-  transition:border-color .12s,background .12s}
-.mini-btn:hover{border-color:var(--ink-3)}
-.mini-btn.danger{color:var(--ink-3);background:transparent;border:1px solid var(--line)}
-.mini-btn.danger:hover{color:var(--bad);background:var(--bad-bg);border-color:var(--line)}
-.spacer{margin-left:auto}
-.empty{text-align:center;color:var(--ink-3);padding:52px 20px;font-size:15px;font-family:var(--font-read);
-  border:1px dashed var(--line-strong);border-radius:10px;margin-top:16px}
-
-/* ══ DELETE MODAL (matches player .overlay/.modal) ══ */
-.overlay{display:none;position:fixed;inset:0;background:var(--overlay);z-index:300;align-items:center;justify-content:center}
-.overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:10px;padding:32px 34px;max-width:440px;width:90%;box-shadow:var(--sh-modal)}
-.modal h2{font-size:1.2rem;font-weight:650;color:var(--ink);margin-bottom:9px;letter-spacing:-.01em}
-.modal p{font-size:.9rem;color:var(--ink-2);line-height:1.6}
-.modal p b{color:var(--ink)}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
-.btn-cancel{background:var(--surface);border:1px solid var(--line-strong);color:var(--ink);padding:9px 18px;border-radius:6px;font-family:var(--font-ui);font-size:.88rem;font-weight:600;cursor:pointer;transition:background .12s}
-.btn-cancel:hover{background:var(--paper)}
-.btn-danger{background:var(--wrong);border:none;color:#fff;padding:9px 18px;border-radius:6px;font-family:var(--font-ui);font-size:.88rem;font-weight:600;cursor:pointer;transition:background .12s}
-.btn-danger:hover{background:#963623}
-
-/* ══ FOOTER ══ */
-.footer{
-  max-width:1440px;margin:72px auto 0;padding:20px 30px 30px;
-  border-top:1px solid var(--line);text-align:center;
-  font-size:.78rem;color:var(--ink-3);
-}
-
-/* Library and creation share one page and the existing import logic. */
-.home-layout{padding-top:44px}
-
-/* ── Library column ── */
-.lib-col-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px}
-.lib-title{font-size:2rem;font-weight:700;letter-spacing:-.045em;line-height:1.2;color:var(--ink)}
-.lib-sub{font-size:.9rem;color:var(--ink-2);margin-top:8px;max-width:60ch}
-.lib-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
-
-/* ── Folder sections ── */
-.folder-section{margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
-.folder-hdr{display:flex;align-items:center;gap:12px;min-height:56px;position:relative}
-summary.folder-hdr{cursor:pointer;list-style:none}
-summary.folder-hdr::-webkit-details-marker{display:none}
-summary.folder-hdr:hover .folder-name{color:var(--accent)}
-.folder-section[open] > .folder-hdr .folder-chevron svg{transform:rotate(90deg)}
-.folder-section > .folder-grid-wrap{padding:0 4px 14px}
-.folder-section .folder-section{margin:0 0 8px 20px;border-radius:6px;background:var(--paper)}
-.folder-section .folder-section .folder-hdr{min-height:48px}
-.folder-chevron{background:none;border:none;cursor:pointer;padding:10px;border-radius:5px;
-  display:flex;align-items:center;color:var(--ink-2);transition:color .12s}
-.folder-chevron:hover{color:var(--ink)}
-.folder-chevron svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;
-  transition:transform .18s var(--ease)}
+/* Library page only. Shared tokens and components live in qf-design.css;
+   these rules use --qf-* tokens and nothing else. */
+.brand-mark{cursor:default}
+.lib-sec{margin-top:var(--qf-s-7)}
+.lib-sec:first-child{margin-top:0}
+.lib-sec__head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--qf-s-2) var(--qf-s-3);margin-bottom:var(--qf-s-3);min-width:0}
+.lib-sec__head h2{font-size:var(--qf-fs-lg);flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.lib-sec__sub{flex:1 0 100%;color:var(--qf-ink-2);font-size:var(--qf-fs-sm)}
+.lib-actions{display:flex;flex-wrap:wrap;gap:var(--qf-s-2);margin-bottom:var(--qf-s-3)}
+.lib-filter{max-width:360px;margin-bottom:var(--qf-s-4)}
+.qf-lec__progress .qf-progress{width:72px}
+.qf-lec__actions .qf-pop .qf-menu{min-width:200px}
+.qf-lec.is-custom{grid-template-columns:36px minmax(0,1fr) auto}
+.qf-lec.dragging{opacity:.4}
+.qf-lec.drop-before{box-shadow:inset 0 2px 0 var(--qf-accent)}
+.qf-lec.drop-after{box-shadow:inset 0 -2px 0 var(--qf-accent)}
+.qf-lec.flash{background:var(--qf-accent-tint)}
+.qf-lec__num[draggable="true"],.qf-lec__num.is-grip{cursor:grab}
+.folder-section{margin-top:var(--qf-s-3)}
+.folder-hdr,.unfiled-hdr{position:relative;display:flex;align-items:center;gap:var(--qf-s-2);min-height:40px;min-width:0;
+  padding:0 var(--qf-s-1);border-radius:var(--qf-r-md);color:var(--qf-ink-2);font-size:var(--qf-fs-sm);font-weight:var(--qf-fw-bold)}
+.folder-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--qf-ink)}
+.folder-count{color:var(--qf-ink-3);font-weight:var(--qf-fw-med)}
+.folder-chevron{display:grid;place-items:center;width:var(--qf-hit);height:var(--qf-hit);border:0;border-radius:var(--qf-r-sm);background:none;color:var(--qf-ink-3)}
+.folder-chevron svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;transition:transform var(--qf-dur) var(--qf-ease)}
 .folder-chevron.open svg{transform:rotate(90deg)}
-.folder-name{font-size:.94rem;font-weight:600;color:var(--ink);flex:1;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.folder-count{font-family:var(--font-mono);font-size:.72rem;font-weight:600;
-  color:var(--ink-2);padding:1px 7px;white-space:nowrap}
-.folder-menu-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:5px;
-  color:var(--ink-3);font-size:.75rem;display:flex;align-items:center;gap:3px;transition:color .12s,background .12s}
-.folder-menu-btn:hover{color:var(--ink);background:var(--line)}
-.folder-menu-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8}
-.folder-grid-wrap{overflow:hidden;transition:opacity .18s var(--ease)}
+.folder-chevron:hover{background:var(--qf-surface-2)}
+.folder-menu-btn{margin-left:auto}
 .folder-grid-wrap.collapsed{display:none}
-.folder-drop-zone{border:1.5px dashed var(--line-strong);border-radius:10px;padding:18px;
-  text-align:center;font-size:.82rem;color:var(--ink-3);margin-top:8px;
-  transition:border-color .14s,background .14s}
-.folder-drop-zone.drag-over{border-color:var(--accent);background:var(--accent-tint)}
-.unfiled-section{margin-bottom:24px}
-.unfiled-hdr{font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--ink-3);margin-bottom:10px;padding:4px 6px 6px;border-bottom:1px solid var(--line);
-  border-radius:6px;cursor:default;transition:background .14s,color .14s}
-.unfiled-hdr.drag-over-folder{background:var(--accent-tint);color:var(--accent);border-bottom-color:var(--accent)}
-
-/* Creation is a focused view; the underlying prompt and parser are unchanged. */
-.create-view{max-width:720px;margin:0 auto}
-.create-head{margin-bottom:28px}
-.create-step{display:grid;grid-template-columns:32px minmax(0,1fr);gap:18px;padding:26px 0;border-top:1px solid var(--line)}
-.step-number{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line-strong);border-radius:50%;font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2)}
-.create-step h2{font-size:1.05rem;font-weight:650;letter-spacing:-.02em;margin-bottom:6px}
-.create-step p{font-size:.88rem;color:var(--ink-2);margin-bottom:18px;max-width:58ch}
-.rail-label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-2);margin-bottom:10px}
-.rail-prompt-hdr{display:flex;align-items:center;gap:8px;margin:16px 0 10px;flex-wrap:wrap}
-.btn-sm{font-size:.80rem;padding:8px 12px}
-.prompt-disclosure{overflow:hidden;max-height:0;visibility:hidden;transition:max-height .25s var(--ease)}
-.prompt-disclosure.open{max-height:360px;visibility:visible}
-.create-note{font-size:.8rem;color:var(--ink-2);margin-top:14px}
-/* ── Grip handle for DnD ── */
-/* The grip is a <button>, so the user-agent border/background must be reset
-   explicitly - the dots sit directly on the card surface. */
-.grip{cursor:grab;padding:4px 5px;border:none;background:none;appearance:none;-webkit-appearance:none;
-  border-radius:4px;color:var(--ink-3);flex-shrink:0;
-  display:flex;align-items:center;transition:color .12s;opacity:.55;
-  -webkit-user-select:none;user-select:none}
-.lec:hover .grip{opacity:1}
-.grip:hover{color:var(--ink-2)}
-.grip svg{width:10px;height:16px;display:block}
-.lec.dragging{opacity:.45;box-shadow:none}
-/* insertion bar: before or after another card */
-.lec.drop-before::before{transform:scaleY(1);background:var(--accent)} /* reuse ::before */
-.lec.drop-after{border-bottom:3px solid var(--accent)}
-/* folder header drag-over highlight */
-.folder-hdr.drag-over-folder .folder-name{color:var(--accent)}
-.folder-hdr.drag-over-folder{background:var(--accent-tint);border-radius:8px}
-
-/* ── Folder menu items (Rename / Delete folder) ── */
-.move-item{display:block;width:100%;text-align:left;background:none;border:none;
-  font-family:var(--font-ui);font-size:.83rem;color:var(--ink);padding:8px 12px;cursor:pointer;
-  border-radius:6px;transition:background .1s}
-.move-item:hover{background:var(--paper)}
-
-/* ── Folder / rename modals ── */
-.modal-label{display:block;font-size:.83rem;font-weight:600;color:var(--ink);margin-bottom:7px}
-.modal-input{width:100%;border:1px solid var(--line-strong);border-radius:7px;
-  background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:.9rem;
-  padding:9px 12px;outline:none;transition:border-color .14s,box-shadow .14s}
-.modal-input:focus{border-color:var(--accent);box-shadow:var(--ring)}
-
-@media(max-width:900px){
-  .wrap{padding:0 18px 40px}
-  .footer{margin-top:44px;padding:18px 18px 26px}
-  .lib-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:720px){
-  .topbar{padding:12px 16px;gap:10px;flex-wrap:wrap}
-  .view-nav{order:3;width:100%;border-top:1px solid var(--line);padding-top:10px}
-  .topbar-right{margin-left:auto}
-  .home-layout{padding-top:28px}
-  .lib-grid{grid-template-columns:1fr}
-  .lib-title{font-size:1.75rem}
-  .folder-section .folder-section{margin-left:4px}
-  .folder-hdr{gap:6px}
-  .create-step{gap:12px}
-}
-@media(prefers-reduced-motion:reduce){
-  *{transition:none !important;animation:none !important}
-  .lec:hover{transform:none}
-  .lec:hover::before{transform:none}
-  .prompt-disclosure{transition:none !important}
-}
-
-/* ── UNLOCK MODAL ── */
-.unlock-hint{font-size:.82rem;color:var(--ink-2);margin-bottom:14px;line-height:1.5}
-
-/* ── SHIPPED QUIZZES ── */
-.shipped-banner{
-  background:var(--flag-bg);color:var(--flag);
-  border:1px solid color-mix(in srgb,var(--flag) 40%,transparent);
-  border-radius:8px;padding:10px 14px;font-size:.84rem;margin-bottom:18px;
-  display:none;line-height:1.45;
-}
-.shipped-banner.visible{display:block}
-
-/* Mixed tests use the existing block and form controls. */
-.mixed-builder{margin:0 10px 18px;padding:14px;border:1px solid var(--line);border-radius:8px}
-.mixed-builder > summary{cursor:pointer;font-weight:600}
-.mixed-form{display:grid;gap:12px;margin-top:14px}
-.mixed-form fieldset{margin:0;padding:10px;border:1px solid var(--line);min-width:0}
-.mixed-form legend{padding:0 5px;color:var(--ink-3)}
-.mixed-choice{display:flex;align-items:flex-start;gap:8px;padding:6px 0;overflow-wrap:anywhere}
-.mixed-choice input{flex:none;margin-top:3px}
-.mixed-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.mixed-count{width:80px;margin-left:8px;padding:6px;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:4px}
-.mixed-note{margin:0;font-size:.82rem;color:var(--ink-3)}
-.mixed-form button:disabled{opacity:.45;cursor:default}
+.folder-drop-zone{padding:var(--qf-s-4);border:1px dashed var(--qf-line-strong);border-radius:var(--qf-r-lg);color:var(--qf-ink-3);text-align:center;font-size:var(--qf-fs-sm)}
+.drag-over-folder,.folder-drop-zone.drag-over{background:var(--qf-accent-tint);color:var(--qf-ink)}
+.lib-skel{display:grid;gap:var(--qf-s-2);padding:var(--qf-s-4)}
+.lib-skel+.lib-skel{border-top:1px solid var(--qf-line)}
+.qf-block__body .qf-week:first-child{margin-top:0}
+.block-actions{display:flex;flex-wrap:wrap;gap:var(--qf-s-2);margin:0 0 var(--qf-s-3)}
+.mixed-form fieldset{border:0;margin:0 0 var(--qf-s-3);padding:0;min-width:0}
+.mixed-form legend{padding:0;margin-bottom:var(--qf-s-1);font-size:var(--qf-fs-xs);font-weight:var(--qf-fw-bold);letter-spacing:.08em;text-transform:uppercase;color:var(--qf-ink-2)}
+.mixed-choice{display:flex;align-items:flex-start;gap:var(--qf-s-2);min-height:var(--qf-hit);padding:var(--qf-s-1) 0;font-size:var(--qf-fs-sm);overflow-wrap:anywhere}
+.mixed-choice input{margin-top:3px;accent-color:var(--qf-accent)}
+.mixed-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--qf-s-2) var(--qf-s-3);margin-bottom:var(--qf-s-3)}
+.mixed-actions label{display:flex;align-items:center;gap:var(--qf-s-2);font-size:var(--qf-fs-sm)}
+.mixed-count{width:6em;min-height:36px;padding:0 var(--qf-s-2);border:1px solid var(--qf-border-input);border-radius:var(--qf-r-md);background:var(--qf-surface)}
+.mixed-note{font-size:var(--qf-fs-sm);color:var(--qf-ink-2)}
+.mixed-note[role="alert"]{color:var(--qf-bad)}
+.set-row{display:flex;align-items:center;gap:var(--qf-s-2)}
+.set-row .qf-range{flex:1 1 auto}
+.qcount-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--qf-s-2) var(--qf-s-4)}
+.qcount-row .qf-range{flex:1 1 200px}
+.prompt-disclosure{display:none}
+.prompt-disclosure.open{display:block}
+.prompt-box{max-height:320px;overflow:auto;padding:var(--qf-s-3);border:1px solid var(--qf-line);border-radius:var(--qf-r-md);
+  background:var(--qf-surface-2);font-family:var(--qf-font-mono);font-size:var(--qf-fs-xs);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.paste-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--qf-s-2) var(--qf-s-3)}
+.create-success{display:flex;flex-wrap:wrap;align-items:center;gap:var(--qf-s-2) var(--qf-s-3);padding:var(--qf-s-3) var(--qf-s-4);
+  border-radius:var(--qf-r-md);background:var(--qf-good-bg);color:var(--qf-ink)}
+.create-success__msg{flex:1 1 220px;min-width:0;color:var(--qf-good);font-weight:var(--qf-fw-med);overflow-wrap:anywhere}
+.lib-foot{max-width:var(--qf-w-library);margin:0 auto;padding:var(--qf-s-5) var(--qf-pad-page) var(--qf-s-7);color:var(--qf-ink-3);font-size:var(--qf-fs-xs)}
+.qf-dialog .qf-input{margin-top:var(--qf-s-2)}
+@media (pointer:coarse){.folder-chevron{width:44px;height:44px}}
 </style>
 </head>
 <body>
-
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="brand">
-    <span class="brand-mark">QuizForge</span>
-
-  </div>
-  <nav class="view-nav" aria-label="Main navigation">
+<a class="qf-skip" href="#main">Skip to content</a>
+<header class="qf-bar">
+  <div class="qf-bar__brand"><span class="brand-mark">QuizForge</span></div>
+  <nav class="qf-bar__nav" aria-label="Main">
     <a href="#library" id="nav-library" aria-current="page">Library</a>
     <a href="#create" id="nav-create">Create a quiz</a>
   </nav>
-  <div class="topbar-right">
-    <button class="tb-btn" id="lock-btn" style="display:none" onclick="lockSite()" aria-label="Lock protected quizzes">
-      <svg viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg>
+  <div class="qf-bar__tools">
+    <button class="qf-btn qf-btn--ghost qf-btn--sm" id="lock-btn" type="button" style="display:none" onclick="lockSite()" aria-label="Lock course quizzes">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg>
       Lock
     </button>
-    <div class="dropdown" id="settings-dd">
-      <button class="tb-btn" onclick="toggleDropdown('settings-dd')">
-        <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.6"/><path d="M10 1.8v2.1M10 16.1v2.1M3.2 3.2l1.5 1.5M15.3 15.3l1.5 1.5M1.8 10h2.1M16.1 10h2.1M3.2 16.8l1.5-1.5M15.3 4.7l1.5-1.5"/></svg>
-        Theme
+    <div class="qf-pop" id="settings-dd">
+      <button class="qf-btn qf-btn--ghost qf-btn--icon" id="settings-btn" type="button" aria-label="Settings" aria-haspopup="true" aria-expanded="false" onclick="toggleDropdown('settings-dd')">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6"/><path d="M10 1.8v2.1M10 16.1v2.1M3.2 3.2l1.5 1.5M15.3 15.3l1.5 1.5M1.8 10h2.1M16.1 10h2.1M3.2 16.8l1.5-1.5M15.3 4.7l1.5-1.5"/></svg>
       </button>
-      <div class="dropdown-menu settings-menu" id="settings-dd-menu">
-        <div class="set-group">
-          <div class="set-label">Appearance</div>
-          <div class="seg" id="seg-theme">
-            <button class="seg-btn" data-theme-val="light"  onclick="setTheme('light')">Light</button>
-            <button class="seg-btn" data-theme-val="dark"   onclick="setTheme('dark')">Dark</button>
-            <button class="seg-btn" data-theme-val="system" onclick="setTheme('system')">System</button>
+      <div class="qf-menu" id="settings-dd-menu" role="group" aria-label="Settings">
+        <div class="qf-menu__group">
+          <div class="qf-menu__label" id="lbl-theme">Theme</div>
+          <div class="qf-seg" id="seg-theme" role="group" aria-labelledby="lbl-theme">
+            <button type="button" data-theme-val="light" onclick="setTheme('light')">Light</button>
+            <button type="button" data-theme-val="dark" onclick="setTheme('dark')">Dark</button>
+            <button type="button" data-theme-val="system" onclick="setTheme('system')">System</button>
           </div>
         </div>
-        <div class="set-group">
-          <div class="set-label">Accent color</div>
-          <div class="swatches" id="sw-accent">
-            <button class="sw" data-accent-val="examplify" style="--sw:#1f6db5" onclick="setAccent('examplify')" title="Examplify blue" aria-label="Examplify blue accent"></button>
-            <button class="sw" data-accent-val="ocean"  style="--sw:#1f6f8b" onclick="setAccent('ocean')"  title="Ocean"  aria-label="Ocean accent"></button>
-            <button class="sw" data-accent-val="indigo" style="--sw:#4f4bd0" onclick="setAccent('indigo')" title="Indigo" aria-label="Indigo accent"></button>
-            <button class="sw" data-accent-val="violet" style="--sw:#7350c9" onclick="setAccent('violet')" title="Violet" aria-label="Violet accent"></button>
-            <button class="sw" data-accent-val="slate"  style="--sw:#506087" onclick="setAccent('slate')"  title="Slate"  aria-label="Slate accent"></button>
+        <div class="qf-menu__group">
+          <div class="qf-menu__label" id="lbl-accent">Accent</div>
+          <div class="qf-swatches" id="sw-accent" role="group" aria-labelledby="lbl-accent">
+            <button type="button" class="qf-swatch" data-accent-val="examplify" style="--sw:#1f6db5" onclick="setAccent('examplify')" title="Examplify blue" aria-label="Examplify blue accent"></button>
+            <button type="button" class="qf-swatch" data-accent-val="ocean" style="--sw:#1f6f8b" onclick="setAccent('ocean')" title="Ocean" aria-label="Ocean accent"></button>
+            <button type="button" class="qf-swatch" data-accent-val="indigo" style="--sw:#4f4bd0" onclick="setAccent('indigo')" title="Indigo" aria-label="Indigo accent"></button>
+            <button type="button" class="qf-swatch" data-accent-val="violet" style="--sw:#7350c9" onclick="setAccent('violet')" title="Violet" aria-label="Violet accent"></button>
+            <button type="button" class="qf-swatch" data-accent-val="slate" style="--sw:#506087" onclick="setAccent('slate')" title="Slate" aria-label="Slate accent"></button>
           </div>
         </div>
-        <div class="set-group">
-          <div class="set-label">Text size <span class="size-readout" id="size-readout">100%</span></div>
-          <div class="slider-row">
-            <span class="slider-a slider-a-sm">A</span>
-            <input type="range" class="size-slider" id="size-slider" min="0.85" max="1.30" step="0.05" value="1"
-                   oninput="setScale(this.value)" aria-label="Text size">
-            <span class="slider-a slider-a-lg">A</span>
+        <div class="qf-menu__group">
+          <div class="qf-menu__label">Text size <span class="qf-num" id="size-readout">100%</span></div>
+          <div class="set-row">
+            <input type="range" class="qf-range" id="size-slider" min="0.85" max="1.30" step="0.05" value="1" oninput="setScale(this.value)" aria-label="Text size">
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</header>
 
-<main class="wrap">
-  <div class="home-layout">
-
-    <!-- Library -->
-    <div class="lib-col" id="lib-col">
-      <div class="lib-col-head" id="lib-col-head">
-        <div>
-          <h1 class="lib-title" tabindex="-1">Your library</h1>
-          <div class="lib-sub">Pick a quiz. Make a little progress.</div>
-        </div>
-        <button class="mini-btn" id="new-folder-btn" onclick="openNewFolderModal()">+ New folder</button>
-      </div>
-      <!-- shipped quiz warning banner (hidden until shown by JS) -->
-      <div class="shipped-banner" id="shipped-banner"></div>
-      <!-- shipped quiz sections rendered here by loadManifest() -->
-      <div id="shipped-root"></div>
-      <details class="folder-section" id="custom-section">
-        <summary class="folder-hdr">
-          <span class="folder-chevron" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg></span>
-          <span class="folder-name">Custom quizzes</span>
-          <span class="folder-count" id="custom-count"></span>
-        </summary>
-        <div class="folder-grid-wrap">
-          <div id="library-root"></div>
-          <div class="empty" id="library-empty" style="display:none">
-            Your custom quizzes will appear here. <a href="#create">Create your first quiz →</a>
-          </div>
-        </div>
-      </details>
+<main class="qf-page" id="main">
+  <div id="lib-col">
+    <div class="qf-pagehead">
+      <h1 tabindex="-1" id="lib-title">Library</h1>
     </div>
-
-    <section class="create-view" id="create-rail" hidden aria-labelledby="create-title">
-      <div class="create-head">
-        <h1 class="lib-title" id="create-title" tabindex="-1">Create a quiz</h1>
-        <p class="lib-sub">Use your notes and your AI chatbot. Bring the result back here to study.</p>
-      </div>
-      <section class="create-step">
-        <span class="step-number" aria-hidden="true">1</span>
-        <div>
-          <h2>Copy your quiz prompt</h2>
-          <p>Choose how many questions you want. The prompt tells your chatbot how to format a quiz for QuizForge.</p>
-          <label class="rail-label" for="qcount-slider">Number of questions</label>
-          <div class="qcount-row">
-            <input type="range" class="size-slider qcount-slider" id="qcount-slider" min="5" max="40" step="1" value="10">
-            <span class="qcount-readout"><b id="qcount-num">10</b> questions</span>
-          </div>
-          <div class="rail-prompt-hdr">
-            <button class="btn btn-primary" id="copy-btn" onclick="copyPrompt()">Copy prompt</button>
-            <button class="btn btn-ghost btn-sm" id="show-prompt-btn" onclick="togglePromptDisclosure()" aria-expanded="false" aria-controls="prompt-disclosure">Show prompt</button>
-          </div>
-          <div class="prompt-disclosure" id="prompt-disclosure">
-            <div class="prompt-wrap"><div class="prompt-box" id="prompt-box" tabindex="0" aria-label="Quiz prompt text"></div></div>
-          </div>
-        </div>
+    <div class="qf-note qf-note--warn" id="shipped-banner" role="alert" hidden></div>
+    <div id="resume-root"></div>
+    <div class="qf-tabs" role="tablist" aria-label="Library sections" id="lib-tabs" hidden>
+      <button type="button" role="tab" id="tab-current" aria-controls="panel-current" aria-selected="false" tabindex="-1">Current</button>
+      <button type="button" role="tab" id="tab-archive" aria-controls="panel-archive" aria-selected="false" tabindex="-1">Archive</button>
+      <button type="button" role="tab" id="tab-mine" aria-controls="panel-mine" aria-selected="true" tabindex="0">My quizzes</button>
+    </div>
+    <section id="panel-current" role="tabpanel" aria-labelledby="tab-current" hidden></section>
+    <section id="panel-archive" role="tabpanel" aria-labelledby="tab-archive" hidden></section>
+    <section id="panel-mine" role="tabpanel" aria-labelledby="tab-mine">
+      <section class="lib-sec" id="demo-section" aria-labelledby="demo-title">
+        <div class="lib-sec__head"><h2 id="demo-title">Demo</h2></div>
+        <div id="shipped-root"></div>
       </section>
-      <section class="create-step">
-        <span class="step-number" aria-hidden="true">2</span>
-        <div>
-          <h2>Use it in your AI chatbot</h2>
-          <p>Open the chatbot you normally use. Paste the prompt, attach your lecture notes or slides, and send. Wait for the quiz, then copy its full response.</p>
+      <section class="lib-sec" id="custom-section" aria-labelledby="custom-title">
+        <div class="lib-sec__head">
+          <h2 id="custom-title">My quizzes</h2>
+          <span class="qf-muted" id="custom-count"></span>
+          <button class="qf-btn qf-btn--sm" id="new-folder-btn" type="button" onclick="openNewFolderModal()">+ Folder</button>
         </div>
-      </section>
-      <section class="create-step">
-        <span class="step-number" aria-hidden="true">3</span>
-        <div>
-          <h2>Bring your quiz back</h2>
-          <p>Paste the response below, including the quiz code block. Already have a QuizForge quiz? You can paste it here directly.</p>
-          <label class="rail-label" for="paste-area">Your chatbot’s response</label>
-          <textarea class="paste-area" id="paste-area" spellcheck="false" placeholder="Paste the full quiz response here…"></textarea>
-          <div class="paste-actions">
-            <button class="btn btn-primary" onclick="loadQuiz()">Add to library</button>
-            <span class="status" id="load-status" role="status" aria-live="polite"></span>
-          </div>
-          <div class="create-note">Custom quizzes and scores are saved in this browser.</div>
+        <div id="library-root"></div>
+        <div class="qf-empty" id="library-empty" hidden>
+          <p>Quizzes you make appear here. <a href="#create">Create one →</a></p>
         </div>
       </section>
     </section>
   </div>
+
+  <section class="qf-page--narrow" id="create-rail" hidden aria-labelledby="create-title" style="margin:0 auto">
+    <div class="qf-pagehead">
+      <h1 id="create-title" tabindex="-1">Create a quiz</h1>
+      <p class="qf-pagehead__sub">Use your notes and your AI chatbot. Bring the result back here to study.</p>
+    </div>
+    <section class="qf-step">
+      <span class="qf-step__num" aria-hidden="true">1</span>
+      <div>
+        <h2>Copy your quiz prompt</h2>
+        <p>Choose how many questions you want. The prompt tells your chatbot how to format a quiz for QuizForge.</p>
+        <label class="qf-label" for="qcount-slider">Number of questions</label>
+        <div class="qcount-row">
+          <input type="range" class="qf-range" id="qcount-slider" min="5" max="40" step="1" value="10">
+          <span class="qf-num"><b id="qcount-num">10</b> questions</span>
+        </div>
+        <div class="paste-actions">
+          <button class="qf-btn qf-btn--primary" id="copy-btn" type="button" onclick="copyPrompt()">Copy prompt</button>
+          <button class="qf-btn qf-btn--ghost qf-btn--sm" id="show-prompt-btn" type="button" onclick="togglePromptDisclosure()" aria-expanded="false" aria-controls="prompt-disclosure">Show prompt</button>
+        </div>
+        <div class="prompt-disclosure" id="prompt-disclosure">
+          <div class="prompt-box" id="prompt-box" tabindex="0" aria-label="Quiz prompt text"></div>
+        </div>
+      </div>
+    </section>
+    <section class="qf-step">
+      <span class="qf-step__num" aria-hidden="true">2</span>
+      <div>
+        <h2>Use it in your AI chatbot</h2>
+        <p>Open the chatbot you normally use. Paste the prompt, attach your lecture notes or slides, and send. Wait for the quiz, then copy its full response.</p>
+      </div>
+    </section>
+    <section class="qf-step">
+      <span class="qf-step__num" aria-hidden="true">3</span>
+      <div>
+        <h2>Bring your quiz back</h2>
+        <p>Paste the response below, including the quiz code block. Already have a QuizForge quiz? You can paste it here directly.</p>
+        <label class="qf-label" for="paste-area">Your chatbot’s response</label>
+        <textarea class="qf-textarea" id="paste-area" spellcheck="false" placeholder="Paste the full quiz response here…" aria-describedby="load-status"></textarea>
+        <div class="paste-actions">
+          <button class="qf-btn qf-btn--primary" type="button" onclick="loadQuiz()">Add to library</button>
+          <span class="qf-status" id="load-status" role="status" aria-live="polite"></span>
+        </div>
+        <div class="create-success" id="create-success" hidden>
+          <span class="create-success__msg" id="create-success-msg"></span>
+          <a class="qf-btn qf-btn--primary qf-btn--sm" id="create-start" href="#">Start it now</a>
+          <a class="qf-btn qf-btn--sm" href="#library">Go to library</a>
+        </div>
+        <p class="qf-muted">Custom quizzes and scores are saved in this browser.</p>
+      </div>
+    </section>
+  </section>
 </main>
 
-<footer class="footer">QuizForge &middot; quizzes and scores are stored only in this browser</footer>
+<footer class="lib-foot">QuizForge · quizzes and scores are stored only in this browser</footer>
 
-<!-- DELETE MODAL -->
-<div class="overlay" id="del-overlay" onclick="closeDeleteModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2>Delete this quiz?</h2>
-    <p>This removes <b id="del-name">this quiz</b> and its score history from this browser. This can't be undone.</p>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeDeleteModal()">Keep it</button>
-      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
-    </div>
+<dialog class="qf-dialog" id="del-dialog" aria-labelledby="del-title">
+  <h2 id="del-title">Delete this quiz?</h2>
+  <p>This removes <b id="del-name">this quiz</b> and its score history from this browser. This can't be undone.</p>
+  <div class="qf-dialog__actions">
+    <button class="qf-btn" type="button" onclick="closeDeleteModal()">Keep it</button>
+    <button class="qf-btn qf-btn--danger" type="button" onclick="confirmDelete()">Delete</button>
   </div>
-</div>
+</dialog>
 
-<!-- NEW FOLDER MODAL -->
-<div class="overlay" id="folder-modal-overlay" onclick="closeFolderModal()">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:380px">
-    <h2 id="folder-modal-title">New folder</h2>
-    <div style="margin-top:14px">
-      <label class="modal-label" for="folder-name-input">Folder name</label>
-      <input class="modal-input" id="folder-name-input" type="text" maxlength="80" autocomplete="off"
-        placeholder="e.g. Cardiology" oninput="clearFolderModalErr()" onkeydown="folderModalKeydown(event)">
-      <div id="folder-modal-err" style="font-size:.82rem;color:var(--wrong);margin-top:6px;display:none"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeFolderModal()">Cancel</button>
-      <button class="btn btn-primary" id="folder-modal-save" onclick="saveFolderModal()">Save</button>
-    </div>
+<dialog class="qf-dialog" id="folder-dialog" aria-labelledby="folder-modal-title">
+  <h2 id="folder-modal-title">New folder</h2>
+  <label class="qf-label" for="folder-name-input">Folder name</label>
+  <input class="qf-input" id="folder-name-input" type="text" maxlength="80" autocomplete="off"
+    placeholder="e.g. Cardiology" oninput="clearFolderModalErr()" onkeydown="folderModalKeydown(event)" aria-describedby="folder-modal-err">
+  <div class="qf-field__err" id="folder-modal-err" hidden></div>
+  <div class="qf-dialog__actions">
+    <button class="qf-btn" type="button" onclick="closeFolderModal()">Cancel</button>
+    <button class="qf-btn qf-btn--primary" id="folder-modal-save" type="button" onclick="saveFolderModal()">Save</button>
   </div>
-</div>
+</dialog>
 
-<!-- DELETE FOLDER MODAL -->
-<div class="overlay" id="del-folder-overlay" onclick="closeDeleteFolderModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2>Delete this folder?</h2>
-    <p>The quizzes inside <b id="del-folder-name">this folder</b> will move to Unfiled. The quizzes themselves are not deleted.</p>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeDeleteFolderModal()">Keep it</button>
-      <button class="btn-danger" onclick="confirmDeleteFolder()">Delete folder</button>
-    </div>
+<dialog class="qf-dialog" id="del-folder-dialog" aria-labelledby="del-folder-title">
+  <h2 id="del-folder-title">Delete this folder?</h2>
+  <p>The quizzes inside <b id="del-folder-name">this folder</b> will move to Unfiled. The quizzes themselves are not deleted.</p>
+  <div class="qf-dialog__actions">
+    <button class="qf-btn" type="button" onclick="closeDeleteFolderModal()">Keep it</button>
+    <button class="qf-btn qf-btn--danger" type="button" onclick="confirmDeleteFolder()">Delete folder</button>
   </div>
-</div>
+</dialog>
 
-<!-- PASSPHRASE UNLOCK MODAL (hidden; opened only by the 5-click brand trigger) -->
-<div class="overlay" id="unlock-overlay" onclick="closeUnlockModal()">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:380px">
-    <h2>Unlock quizzes</h2>
-    <p class="unlock-hint">Enter your passphrase to access course quizzes on this device.</p>
-    <div>
-      <label class="modal-label" for="unlock-pw-input">Passphrase</label>
-      <input class="modal-input" id="unlock-pw-input" type="password" autocomplete="off"
-        onkeydown="unlockModalKeydown(event)" placeholder="">
-      <div id="unlock-modal-err" style="font-size:.82rem;color:var(--wrong);margin-top:6px;display:none">Incorrect passphrase</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeUnlockModal()">Cancel</button>
-      <button class="btn btn-primary" id="unlock-modal-btn" onclick="attemptUnlock()">Unlock</button>
-    </div>
+<!-- Passphrase dialog: opened only by the hidden 5-click wordmark trigger. -->
+<dialog class="qf-dialog" id="unlock-dialog" aria-labelledby="unlock-title">
+  <h2 id="unlock-title">Unlock quizzes</h2>
+  <p>Enter your passphrase to see more quizzes on this device.</p>
+  <label class="qf-label" for="unlock-pw-input" style="margin-top:12px">Passphrase</label>
+  <input class="qf-input" id="unlock-pw-input" type="password" autocomplete="off" onkeydown="unlockModalKeydown(event)" aria-describedby="unlock-modal-err">
+  <div class="qf-field__err" id="unlock-modal-err" role="alert" hidden></div>
+  <div class="qf-dialog__actions">
+    <button class="qf-btn" type="button" onclick="closeUnlockModal()">Cancel</button>
+    <button class="qf-btn qf-btn--primary" id="unlock-modal-btn" type="button" onclick="attemptUnlock()">Unlock</button>
   </div>
-</div>
+</dialog>
+
+<dialog class="qf-sheet" id="mixed-sheet" aria-labelledby="mixed-title">
+  <div class="qf-sheet__head">
+    <h2 id="mixed-title">Build a test</h2>
+    <button class="qf-btn qf-btn--ghost qf-btn--icon" type="button" aria-label="Close" onclick="closeMixedSheet()">✕</button>
+  </div>
+  <div id="mixed-body"></div>
+</dialog>
 
 <!-- Verbatim prompt source (read as plain text; never HTML-parsed) -->
 <script type="text/plain" id="prompt-src">
@@ -857,11 +510,6 @@ function copyPrompt(){
   const done = () => {
     btn.textContent = 'Copied ✓';
     btn.classList.add('copied');
-    if(motionOK()){
-      anime({ targets: btn, easing: EASE_FN,
-              scale: [{ value: .96, duration: 90 }, { value: 1, duration: 90 }],
-              complete: () => { btn.style.transform = ''; } });
-    }
     setTimeout(() => { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 2000);
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -927,19 +575,28 @@ function validate(data){
   return null;
 }
 
+function attemptsFor(quizId, scores){
+  return scores.filter(s => s && s.quizId === quizId)
+    .sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* Chrome dash convention: em/en dashes become plain hyphens in titles shown in UI chrome.
+   Question and explanation content is never touched. */
+function dash(s){
+  return String(s).replace(/\u2014/g, '-').replace(/\u2013/g, '-');
+}
+
+
+/* ── Create a quiz: status line + success row ── */
 function setStatus(msg, kind){
   const el = document.getElementById('load-status');
   el.textContent = msg;
-  el.className = 'status show ' + (kind === 'ok' ? 'ok' : 'err');
-  if(kind === 'err' && motionOK()){
-    anime({ targets: el, opacity: [0, 1], duration: 200, easing: EASE_FN,
-            complete: () => { el.style.opacity = ''; } });
-    const ta = document.getElementById('paste-area');
-    anime({ targets: ta, easing: EASE_FN,
-            translateX: [{ value: -5, duration: 52 }, { value: 5, duration: 52 }, { value: -3, duration: 52 },
-                         { value: 3, duration: 52 }, { value: 0, duration: 52 }],
-            complete: () => { ta.style.transform = ''; } });
-  }
+  el.className = 'qf-status show ' + (kind === 'ok' ? 'ok is-good' : 'err is-bad');
+  const ta = document.getElementById('paste-area');
+  if(ta) ta.setAttribute('aria-invalid', String(kind === 'err'));
+  if(kind === 'err') document.getElementById('create-success').hidden = true;
 }
 
 function loadQuiz(){
@@ -976,33 +633,54 @@ function loadQuiz(){
   setQuizzes(quizzes);
 
   const n = rec.questions.length;
-  setStatus('Loaded “' + dash(title) + '” - ' + n + ' question' + (n === 1 ? '' : 's') + '. It is in your library.', 'ok');
+  setStatus('', 'ok');
+  document.getElementById('create-success-msg').textContent =
+    'Added “' + dash(title) + '” · ' + n + ' question' + (n === 1 ? '' : 's') + '. It is in your library.';
+  document.getElementById('create-start').href = 'quiz.html?id=' + encodeURIComponent(rec.id);
+  document.getElementById('create-success').hidden = false;
   document.getElementById('paste-area').value = '';
-  location.hash = 'library';
-  showHomeView();
-  document.getElementById('custom-section').open = true;
-  renderLibrary(rec.id);
+  renderLibrary(rec.id, true);
+  document.getElementById('create-start').focus();
 }
 
-/* ── Library ── */
-function attemptsFor(quizId, scores){
-  return scores.filter(s => s && s.quizId === quizId)
-    .sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+/* ── Native dialogs. jsdom and very old browsers lack showModal, so fall back
+   to the open attribute. Focus goes back to whatever opened the dialog. ── */
+const _dialogOpeners = new Map();
+function openDialog(id, focusEl){
+  const d = document.getElementById(id);
+  if(!d || d.open) return;
+  _dialogOpeners.set(id, document.activeElement);
+  if(typeof d.showModal === 'function'){ try{ d.showModal(); }catch(e){ d.setAttribute('open', ''); } }
+  else d.setAttribute('open', '');
+  if(focusEl) setTimeout(() => focusEl.focus(), 0);
 }
-function esc(s){
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function closeDialog(id){
+  const d = document.getElementById(id);
+  if(!d) return;
+  if(d.open){ if(typeof d.close === 'function') d.close(); else d.removeAttribute('open'); }
+  const opener = _dialogOpeners.get(id);
+  _dialogOpeners.delete(id);
+  if(opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
 }
-/* Chrome dash convention: em/en dashes become plain hyphens in titles shown in UI chrome.
-   Question and explanation content is never touched. */
-function dash(s){
-  return String(s).replace(/\u2014/g, '-').replace(/\u2013/g, '-');
+function isDialogOpen(id){ const d = document.getElementById(id); return !!(d && d.open); }
+/* Esc on a native modal fires "cancel"; route it through our close so state resets. */
+document.addEventListener('cancel', e => {
+  if(e.target && e.target.id){ e.preventDefault(); closeByDialogId(e.target.id); }
+}, true);
+function closeByDialogId(id){
+  ({ 'del-dialog': closeDeleteModal, 'folder-dialog': closeFolderModal, 'del-folder-dialog': closeDeleteFolderModal,
+     'unlock-dialog': closeUnlockModal, 'mixed-sheet': closeMixedSheet }[id] || (() => closeDialog(id)))();
 }
+/* A click on the backdrop lands on the dialog element itself. */
+document.addEventListener('click', e => {
+  const t = e.target;
+  if(!t || t.tagName !== 'DIALOG' || !t.open) return;
+  const r = t.getBoundingClientRect();
+  if(!r.width) return;   /* no layout (tests): never guess */
+  if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeByDialogId(t.id);
+});
 
-/* ── Motion (anime.js, all gated; reduced motion or a missing library means instant) ── */
-const EASE_FN = 'cubicBezier(.22,1,.36,1)';
-const motionOK = () => !!window.anime && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* Build a single quiz card element. */
+/* ── Saved progress and attempts ── */
 /* In-progress attempt saved by quiz.html (qf_progress::id::<id> or ::src::<file>). */
 function savedProgress(kind, ref){
   try{
@@ -1010,78 +688,602 @@ function savedProgress(kind, ref){
     return d && d.v === 1 && Number.isInteger(d.answered) && Number.isInteger(d.n) ? d : null;
   }catch(e){ return null; }
 }
-function takeLabel(prog){
-  return (prog ? 'Resume · ' + prog.answered + '/' + prog.n + ' answered ' : 'Take ') +
-    '<svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg>';
+const SHIPPED_ATTEMPTS_KEY = 'qf_shipped_attempts';
+function getShippedAttempts(){
+  try{ const a = JSON.parse(store.get(SHIPPED_ATTEMPTS_KEY, '[]')); return Array.isArray(a) ? a : []; }catch(e){ return []; }
 }
-
-function buildCard(qz, scores){
-  const atts = attemptsFor(qz.id, scores);
+/* Quiz summary used by every row: counts only, never quiz content. */
+function quizSummary(atts, prog, n, href){
+  const best = atts.length ? Math.max.apply(null, atts.map(a => Number(a.pct) || 0)) : null;
   const last = atts.length ? atts[atts.length - 1] : null;
-  let dot = 'none', dotT = 'No attempts yet';
-  if(last){
-    if(last.pct >= 70){ dot = 'good'; dotT = 'Last attempt ' + last.pct + '%'; }
-    else { dot = 'warn'; dotT = 'Last attempt ' + last.pct + '% - needs work'; }
-  }
-  let scoreHtml;
-  if(atts.length){
-    const shown = atts.slice(-8);
-    const lead = atts.length > 8 ? '... ' : '';
-    const pills = lead + shown.map((a, i) =>
-      '<span class="pill ' + (a.pct >= 70 ? 'p-good' : 'p-bad') +
-      (i === shown.length - 1 ? ' p-last' : '') + '">' + a.score + '/' + a.total + '</span>'
-    ).join('');
-    const best = Math.max.apply(null, atts.map(a => a.pct));
-    scoreHtml = '<div class="pills">' + pills + '</div><span class="best">best ' + best + '%</span>';
-  } else {
-    scoreHtml = '<span class="noatt">no attempts yet</span>';
-  }
-  const n = qz.questions.length;
-  const card = document.createElement('section');
-  card.className = 'lec';
-  card.dataset.id = qz.id;
-  card.draggable = true;
-  /* Grip handle (6-dot): only drag when initiated here */
-  const gripSvg = '<svg viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">' +
-    '<circle cx="3" cy="3" r="1.4"/><circle cx="7" cy="3" r="1.4"/>' +
-    '<circle cx="3" cy="8" r="1.4"/><circle cx="7" cy="8" r="1.4"/>' +
-    '<circle cx="3" cy="13" r="1.4"/><circle cx="7" cy="13" r="1.4"/>' +
-    '</svg>';
-  card.innerHTML =
-    '<div class="lec-head">' +
-      '<button class="grip" aria-label="Drag to reorder" tabindex="0">' + gripSvg + '</button>' +
-      '<span class="badge" title="' + n + ' questions" aria-label="' + n + ' questions">' + n + '</span>' +
-      '<div class="lec-title">' +
-        '<div class="q-title">' + esc(dash(qz.title)) + '</div>' +
-        (qz.subtitle ? '<div class="q-sub">' + esc(dash(qz.subtitle)) + '</div>' : '') +
-      '</div>' +
-      '<span class="dot dot-' + dot + '" title="' + esc(dotT) + '"></span>' +
-    '</div>' +
-    '<div class="rows">' +
-      '<div class="row"><div class="qscore">' + scoreHtml + '</div></div>' +
-      '<div class="row actions-row">' +
-        '<a class="take" href="quiz.html?id=' + encodeURIComponent(qz.id) + '">' +
-          takeLabel(savedProgress('id', qz.id)) + '</a>' +
-        '<button class="mini-btn" data-act="export">Export</button>' +
-        '<button class="mini-btn danger spacer" data-act="delete">Delete</button>' +
-      '</div>' +
-    '</div>';
-
-  /* Grip: only allow drag when mousedown was on the grip */
-  const grip = card.querySelector('.grip');
-  grip.addEventListener('mousedown', () => { dragFromHandle = true; });
-  card.addEventListener('mousedown', e => { if(e.target !== grip && !grip.contains(e.target)) dragFromHandle = false; });
-  card.addEventListener('dragstart', e => dndStart(e, qz.id));
-  card.addEventListener('dragover',  e => dndOver(e, card));
-  card.addEventListener('dragleave', () => dndLeaveCard(card));
-  card.addEventListener('drop',      e => dndDrop(e));
-  card.addEventListener('dragend',   () => dndCleanup());
-
-  card.querySelector('[data-act="export"]').addEventListener('click', () => exportQuiz(qz.id));
-  card.querySelector('[data-act="delete"]').addEventListener('click', () => openDeleteModal(qz.id, qz.title));
-  return card;
+  return { href, n, attempts: atts.length, best, last,
+           inProgress: prog ? { answered: prog.answered, n: prog.n, ts: Number(prog.ts) || 0 } : null };
+}
+function quizRowState(q){
+  if(q.inProgress) return 'progress';
+  if(q.attempts) return q.best >= 70 ? 'done-good' : 'done-low';
+  return 'new';
 }
 
+/* ── Library model (spec 2.1 + 10.3). Built only from ids and manifest fields. ── */
+const LEC_RE = /^([a-z]+)-w(\d{2})-(lec(\d+)|lab([a-z0-9]+))$/;
+const PROTECTED_FILE_RE = /^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/;
+const CURRENT_BLOCK_KEY = 'qf_current_block';
+function parseQuizId(id){
+  const s = String(id);
+  const m = LEC_RE.exec(s);
+  if(m) return { block: m[1], week: Number(m[2]), kind: m[4] !== undefined ? 'lec' : 'lab', num: m[4] !== undefined ? m[4] : null };
+  const loose = /^([a-z0-9]+(?:-[a-z0-9]+)*?)-w\d{2}-/i.exec(s);
+  return { block: loose ? loose[1].toLowerCase() : 'other', week: null, kind: null, num: null };
+}
+function blockName(slug){
+  return slug === 'other' ? 'Other quizzes' : slug.replace(/-/g, ' ').toUpperCase();
+}
+/* "Lec 16 — Pneumoconiosis" → "Pneumoconiosis" (number shows in the badge). */
+function stripLecPrefix(title){
+  const t = String(title || '');
+  const s = t.replace(/^\s*(?:lec(?:ture)?\.?\s*\d+[a-z]?|lab)\s*[—–:|·-]\s*/i, '').trim();
+  return s || t;
+}
+function normalizeEntry(entry, attempts){
+  const p = parseQuizId(entry.id);
+  const atts = attempts.filter(a => a && a.quizId === entry.id).sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+  const n = Math.max(0, Number(entry.question_count) || 0);
+  return { key: entry.id, block: p.block, week: p.week, kind: p.kind, num: p.num,
+           title: dash(stripLecPrefix(entry.title || entry.id)), entry,
+           quiz: quizSummary(atts, savedProgress('src', entry.file), n, 'quiz.html?src=' + encodeURIComponent(entry.file)) };
+}
+function compareLectures(a, b){
+  const rank = l => l.kind === 'lec' ? 0 : l.kind === 'lab' ? 1 : 2;
+  if(rank(a) !== rank(b)) return rank(a) - rank(b);
+  if(a.kind === 'lec') return Number(a.num) - Number(b.num) || a.title.localeCompare(b.title);
+  return a.title.localeCompare(b.title, undefined, { numeric: true });
+}
+/* Group decrypted sections into blocks → weeks → lectures without mutating them.
+   `first` is the position of the block's first quiz in manifest order. */
+function buildCourseModel(sections, attempts){
+  const blocks = new Map(), seen = new Set();
+  let idx = 0;
+  (Array.isArray(sections) ? sections : []).forEach(sec => {
+    (sec && Array.isArray(sec.quizzes) ? sec.quizzes : []).forEach(entry => {
+      if(!entry || !entry.id || !entry.file || seen.has(entry.id)) return;
+      seen.add(entry.id);
+      const lec = normalizeEntry(entry, attempts);
+      if(!blocks.has(lec.block)) blocks.set(lec.block, { slug: lec.block, name: blockName(lec.block), first: idx, count: 0, weeks: new Map() });
+      const b = blocks.get(lec.block), wk = lec.week === null ? 'other' : lec.week;
+      if(!b.weeks.has(wk)) b.weeks.set(wk, { week: lec.week, label: lec.week === null ? 'Other' : 'Week ' + lec.week, lectures: [] });
+      b.weeks.get(wk).lectures.push(lec);
+      b.count++; idx++;
+    });
+  });
+  return Array.from(blocks.values()).map(b => ({
+    slug: b.slug, name: b.name, first: b.first, count: b.count,
+    weeks: Array.from(b.weeks.values())
+      .sort((x, y) => (x.week === null ? 1e9 : x.week) - (y.week === null ? 1e9 : y.week))
+      .map(w => ({ week: w.week, label: w.label, lectures: w.lectures.slice().sort(compareLectures) }))
+  }));
+}
+/* Spec 2.4: device pin → block that first appears last in manifest order → most quizzes. */
+function pickCurrentBlock(blocks){
+  if(!blocks.length) return null;
+  const pinned = store.get(CURRENT_BLOCK_KEY, '');
+  const pin = blocks.find(b => b.slug === pinned);
+  if(pin) return { slug: pin.slug, pinned: true };
+  const named = blocks.filter(b => b.slug !== 'other');
+  if(named.length) return { slug: named.reduce((a, b) => b.first > a.first ? b : a).slug, pinned: false };
+  return { slug: blocks.reduce((a, b) => b.count > a.count ? b : a).slug, pinned: false };
+}
+/* Current block first, then every other block newest first. */
+function splitBlocks(blocks){
+  const cur = pickCurrentBlock(blocks);
+  const current = cur ? blocks.find(b => b.slug === cur.slug) : null;
+  const archive = blocks.filter(b => b !== current).sort((a, b) => b.first - a.first);
+  return { current, pinned: !!(cur && cur.pinned), archive };
+}
+function blockStats(block){
+  const lecs = block.weeks.flatMap(w => w.lectures), taken = lecs.filter(l => l.quiz.attempts);
+  const avg = taken.length ? Math.round(taken.reduce((s, l) => s + l.quiz.best, 0) / taken.length) : null;
+  return { total: lecs.length, taken: taken.length, avg, inProgress: lecs.filter(l => l.quiz.inProgress).length };
+}
+
+/* ── Shared row component (.qf-lec) ── */
+const SVG_CHEV = '<svg class="qf-chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l6 5-6 5"/></svg>';
+const SVG_MORE = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="5" cy="10" r="1.3"/><circle cx="10" cy="10" r="1.3"/><circle cx="15" cy="10" r="1.3"/></svg>';
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text !== undefined) e.textContent = text;
+  return e;
+}
+function primaryLabel(q){ return q.inProgress ? 'Resume quiz' : q.attempts ? 'Retake' : 'Start quiz'; }
+function progressLine(q){
+  const wrap = el('div', 'qf-lec__progress');
+  const bits = [];
+  if(q.inProgress){
+    const total = q.inProgress.n || q.n || 1;
+    const bar = el('progress', 'qf-progress');
+    bar.max = total; bar.value = Math.min(q.inProgress.answered, total);
+    bar.setAttribute('aria-label', 'Answered ' + q.inProgress.answered + ' of ' + total);
+    wrap.appendChild(bar);
+    bits.push(q.inProgress.answered + '/' + total + ' answered');
+  }
+  if(q.last) bits.push('last ' + q.last.score + '/' + q.last.total);
+  if(q.best !== null) bits.push('best ' + q.best + '%');
+  if(q.attempts > 1) bits.push(q.attempts + ' attempts');
+  if(!bits.length) bits.push('Not started');
+  wrap.appendChild(el('span', '', bits.join(' · ')));
+  return wrap;
+}
+/* opts: {key, num, isLab, title, meta, quiz, menu:[{label, run, danger}], data:{}} */
+function buildRow(opts){
+  const q = opts.quiz;
+  const row = el('div', 'qf-lec');
+  row.dataset.state = quizRowState(q);
+  Object.entries(opts.data || {}).forEach(([k, v]) => { row.dataset[k] = v; });
+  const num = el('span', 'qf-lec__num' + (opts.isLab ? ' qf-lec__num--lab' : ''), opts.num);
+  num.setAttribute('aria-hidden', 'true');
+  const title = el('a', 'qf-lec__title', opts.title);
+  title.href = q.href;
+  const meta = el('div', 'qf-lec__meta', opts.meta);
+  const actions = el('div', 'qf-lec__actions');
+  const primary = el('a', 'qf-btn qf-btn--sm qf-btn--primary', primaryLabel(q));
+  primary.href = q.href;
+  primary.dataset.act = 'primary';
+  primary.setAttribute('aria-label', primaryLabel(q) + ': ' + opts.title);
+  actions.appendChild(primary);
+  const items = (opts.menu || []).slice();
+  if(q.inProgress && opts.progressRef) items.unshift({ label: 'Retake from scratch', run: () => {
+    try{ localStorage.removeItem('qf_progress::' + opts.progressRef); }catch(e){}
+    location.href = q.href;
+  }});
+  if(items.length) actions.appendChild(buildMenu('More actions: ' + opts.title, items));
+  row.append(num, title, meta, progressLine(q), actions);
+  return row;
+}
+
+/* ── Overflow menus (.qf-pop > button + .qf-menu) ── */
+let _openMenu = null;
+function buildMenu(label, items){
+  const pop = el('div', 'qf-pop');
+  const btn = el('button', 'qf-btn qf-btn--ghost qf-btn--sm qf-btn--icon');
+  btn.type = 'button'; btn.innerHTML = SVG_MORE;
+  btn.setAttribute('aria-label', label);
+  btn.setAttribute('aria-haspopup', 'menu'); btn.setAttribute('aria-expanded', 'false');
+  const menu = el('div', 'qf-menu');
+  menu.setAttribute('role', 'menu');
+  items.forEach(it => {
+    if(it.sep){ menu.appendChild(el('div', 'qf-menu__sep')); return; }
+    const b = el('button', 'qf-menu__item' + (it.danger ? ' qf-menu__item--danger' : ''), it.label);
+    b.type = 'button'; b.setAttribute('role', 'menuitem');
+    b.addEventListener('click', () => { closeMenus(false); it.run(); });
+    menu.appendChild(b);
+  });
+  btn.addEventListener('click', e => { e.stopPropagation(); toggleMenu(btn, menu); });
+  menu.addEventListener('keydown', menuKeys);
+  pop.append(btn, menu);
+  return pop;
+}
+function toggleMenu(btn, menu){
+  const open = !menu.classList.contains('is-open');
+  closeMenus(false);
+  if(!open) return;
+  menu.classList.add('is-open');
+  btn.setAttribute('aria-expanded', 'true');
+  _openMenu = { btn, menu };
+  const first = menu.querySelector('[role="menuitem"], button, input');
+  if(first && menu.getAttribute('role') === 'menu') first.focus();
+}
+function closeMenus(returnFocus){
+  document.querySelectorAll('.qf-menu.is-open').forEach(m => m.classList.remove('is-open'));
+  document.querySelectorAll('[aria-expanded="true"][aria-haspopup]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  if(returnFocus && _openMenu && _openMenu.btn.isConnected) _openMenu.btn.focus();
+  _openMenu = null;
+}
+function menuKeys(e){
+  const items = [...e.currentTarget.querySelectorAll('[role="menuitem"]')];
+  if(!items.length) return;
+  const i = items.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown'){ e.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if(e.key === 'Home'){ e.preventDefault(); items[0].focus(); }
+  else if(e.key === 'End'){ e.preventDefault(); items[items.length - 1].focus(); }
+}
+document.addEventListener('click', e => { if(!e.target.closest('.qf-pop')) closeMenus(false); });
+/* Settings popover reuses the same open/close rules. */
+function toggleDropdown(id){
+  toggleMenu(document.querySelector('#' + id + ' > button'), document.getElementById(id + '-menu'));
+}
+
+/* ── Course library: Current + Archive (unlocked only) ── */
+function courseRow(lec){
+  const kind = lec.kind === 'lab' ? 'Lab' : lec.kind === 'lec' ? 'Lecture' : 'Quiz';
+  const meta = [lec.week === null ? null : 'Week ' + lec.week, kind,
+                lec.quiz.n + ' question' + (lec.quiz.n === 1 ? '' : 's')].filter(Boolean).join(' · ');
+  return buildRow({ title: lec.title, meta, quiz: lec.quiz, num: lec.kind === 'lab' ? 'LAB' : lec.num || '·',
+    isLab: lec.kind === 'lab', progressRef: 'src::' + lec.entry.file,
+    data: { shippedId: lec.key, key: lec.key } });
+}
+function weekGroup(week, open){
+  const d = el('details', 'qf-week');
+  d.dataset.week = week.week === null ? 'other' : String(week.week);
+  const taken = week.lectures.filter(l => l.quiz.attempts).length;
+  const sum = el('summary');
+  sum.innerHTML = SVG_CHEV;
+  sum.append(el('span', '', week.label), el('span', 'qf-week__count qf-num', taken + '/' + week.lectures.length));
+  sum.lastChild.setAttribute('aria-label', taken + ' of ' + week.lectures.length + ' taken');
+  const list = el('div', 'qf-list');
+  week.lectures.forEach(l => list.appendChild(courseRow(l)));
+  d.append(sum, list);
+  d.open = !!open;
+  return d;
+}
+/* Newest week and any week with unfinished work start open. */
+function weekGroups(block, openNewest){
+  const newest = block.weeks.filter(w => w.week !== null).slice(-1)[0];
+  return block.weeks.map(w => weekGroup(w, (openNewest && w === newest) || w.lectures.some(l => l.quiz.inProgress)));
+}
+function statsText(st){
+  return [st.total + ' quiz' + (st.total === 1 ? '' : 'zes'), st.taken + ' taken',
+          st.avg === null ? null : 'avg best ' + st.avg + '%'].filter(Boolean).join(' · ');
+}
+function blockActions(block, extra){
+  const row = el('div', 'block-actions');
+  if(_mixedUnlocked){
+    const b = el('button', 'qf-btn qf-btn--sm', 'Build test');
+    b.type = 'button'; b.dataset.act = 'build-test';
+    b.setAttribute('aria-label', 'Build a mixed test from ' + block.name);
+    b.addEventListener('click', () => openMixedSheet(block.slug));
+    row.appendChild(b);
+  }
+  if(extra) row.appendChild(extra);
+  return row;
+}
+function renderCurrentPanel(panel, split){
+  const block = split.current;
+  if(!block){
+    panel.appendChild(emptyState('No course quizzes yet.', 'Your own quizzes are under My quizzes.', 'Go to My quizzes', () => selectTab('mine')));
+    return;
+  }
+  const head = el('div', 'lib-sec__head');
+  head.appendChild(el('h2', '', split.pinned ? block.name : block.name + ' · latest quizzes'));
+  head.lastChild.id = 'current-title';
+  head.appendChild(el('p', 'lib-sec__sub', statsText(blockStats(block))));
+  let unpin = null;
+  if(split.pinned){
+    unpin = el('button', 'qf-btn qf-btn--ghost qf-btn--sm', 'Show the newest block instead');
+    unpin.type = 'button';
+    unpin.addEventListener('click', () => { try{ localStorage.removeItem(CURRENT_BLOCK_KEY); }catch(e){} renderCourse(); });
+  }
+  const wrap = el('div', '');
+  wrap.dataset.block = block.slug;
+  wrap.append(head, blockActions(block, unpin), ...weekGroups(block, true));
+  panel.appendChild(wrap);
+}
+function renderArchivePanel(panel, split){
+  if(!split.archive.length){
+    panel.appendChild(emptyState('No older blocks yet.', 'When a new block starts, earlier blocks move here.'));
+    return;
+  }
+  const label = el('label', 'qf-sr', 'Filter lectures');
+  label.htmlFor = 'archive-filter';
+  const input = el('input', 'qf-input lib-filter');
+  input.type = 'search'; input.id = 'archive-filter'; input.placeholder = 'Filter lectures';
+  input.autocomplete = 'off';
+  const none = el('div', 'qf-empty');
+  none.id = 'archive-nomatch'; none.hidden = true;
+  panel.append(label, input, none);
+  split.archive.forEach(block => {
+    const d = el('details', 'qf-block');
+    d.dataset.block = block.slug;
+    const sum = el('summary');
+    sum.innerHTML = SVG_CHEV;
+    sum.append(el('span', 'qf-block__name', block.name), el('span', 'qf-block__stats', statsText(blockStats(block))));
+    const pin = el('button', 'qf-btn qf-btn--ghost qf-btn--sm', 'Make this my current block');
+    pin.type = 'button';
+    pin.addEventListener('click', () => { store.set(CURRENT_BLOCK_KEY, block.slug); selectTab('current'); renderCourse(); });
+    const body = el('div', 'qf-block__body');
+    body.append(blockActions(block, pin), ...weekGroups(block, false));
+    d.append(sum, body);
+    d.open = blockStats(block).inProgress > 0;
+    panel.appendChild(d);
+  });
+  input.addEventListener('input', () => filterArchive(input.value));
+}
+/* Substring match on title and lecture number; opens matches, hides empty weeks. */
+function filterArchive(raw){
+  const q = String(raw || '').trim().toLowerCase();
+  const panel = document.getElementById('panel-archive');
+  let hits = 0;
+  panel.querySelectorAll('details.qf-block').forEach(block => {
+    let blockHits = 0;
+    block.querySelectorAll('details.qf-week').forEach(week => {
+      let weekHits = 0;
+      week.querySelectorAll('.qf-lec').forEach(row => {
+        const title = row.querySelector('.qf-lec__title').textContent.toLowerCase();
+        const num = row.querySelector('.qf-lec__num').textContent.toLowerCase();
+        const show = !q || title.includes(q) || num.includes(q) || num.replace(/^0+/, '') === q.replace(/^0+/, '');
+        row.hidden = !show; if(show) weekHits++;
+      });
+      week.hidden = !weekHits;
+      if(q && weekHits) week.open = true;
+      blockHits += weekHits;
+    });
+    block.hidden = !blockHits;
+    if(q && blockHits) block.open = true;
+    hits += blockHits;
+  });
+  const none = document.getElementById('archive-nomatch');
+  none.hidden = !(q && !hits);
+  none.textContent = 'No lectures match "' + String(raw).trim() + '".';
+}
+
+/* ── Empty, error and loading states ── */
+function emptyState(title, line, actionLabel, action){
+  const box = el('div', 'qf-empty');
+  box.appendChild(el('p', 'qf-empty__title', title));
+  if(line) box.appendChild(el('p', '', line));
+  if(actionLabel){
+    const b = el('button', 'qf-btn qf-btn--sm', actionLabel);
+    b.type = 'button'; b.addEventListener('click', action);
+    box.appendChild(b);
+  }
+  return box;
+}
+function errorState(title, message, retry){
+  const box = el('div', 'qf-error');
+  box.setAttribute('role', 'alert');
+  box.appendChild(el('p', 'qf-error__title', title));
+  box.appendChild(el('p', '', message));
+  const b = el('button', 'qf-btn qf-btn--sm', 'Retry');
+  b.type = 'button'; b.dataset.act = 'retry';
+  b.addEventListener('click', retry);
+  box.appendChild(b);
+  return box;
+}
+function skeletonList(rows, label){
+  const list = el('div', 'qf-list');
+  list.setAttribute('aria-busy', 'true');
+  list.appendChild(el('span', 'qf-sr', label));
+  for(let i = 0; i < rows; i++){
+    const r = el('div', 'lib-skel');
+    r.setAttribute('aria-hidden', 'true');
+    r.append(el('span', 'qf-skel qf-skel--title'), el('span', 'qf-skel qf-skel--line'));
+    list.appendChild(r);
+  }
+  return list;
+}
+
+/* ── Library state. Course data exists only after a successful decrypt. ── */
+const LOAD_TIMEOUT_MS = 8000;
+const TIMEOUT_MSG = 'This is taking longer than it should. Check your connection, then retry.';
+const _lib = { publicState: 'loading', publicError: '', publicSections: [],
+               courseState: 'locked', courseError: '', courseSections: null };
+const TAB_KEY = 'qf_lib_tab';
+function currentTab(){
+  let t = 'current';
+  try{ t = sessionStorage.getItem(TAB_KEY) || 'current'; }catch(e){}
+  return ['current', 'archive', 'mine'].includes(t) ? t : 'current';
+}
+function selectTab(name, focus){
+  try{ sessionStorage.setItem(TAB_KEY, name); }catch(e){}
+  syncTabs();
+  if(focus) document.getElementById('tab-' + name).focus();
+}
+/* Locked: no tab strip, only My quizzes content (Demo + custom). */
+function syncTabs(){
+  const unlocked = _lib.courseState !== 'locked';
+  const tab = unlocked ? currentTab() : 'mine';
+  document.getElementById('lib-tabs').hidden = !unlocked;
+  ['current', 'archive', 'mine'].forEach(name => {
+    const t = document.getElementById('tab-' + name), p = document.getElementById('panel-' + name);
+    t.setAttribute('aria-selected', String(name === tab));
+    t.tabIndex = name === tab ? 0 : -1;
+    p.hidden = name !== tab;
+    if(unlocked) p.setAttribute('role', 'tabpanel'); else p.removeAttribute('role');
+  });
+}
+document.getElementById('lib-tabs').addEventListener('click', e => {
+  const t = e.target.closest('[role="tab"]');
+  if(t) selectTab(t.id.slice(4));
+});
+document.getElementById('lib-tabs').addEventListener('keydown', e => {
+  const tabs = ['current', 'archive', 'mine'], i = tabs.indexOf(currentTab());
+  let n = -1;
+  if(e.key === 'ArrowRight') n = (i + 1) % 3;
+  else if(e.key === 'ArrowLeft') n = (i + 2) % 3;
+  else if(e.key === 'Home') n = 0;
+  else if(e.key === 'End') n = 2;
+  if(n < 0) return;
+  e.preventDefault();
+  selectTab(tabs[n], true);
+});
+let _courseModel = [];
+function renderCourse(){
+  const cur = document.getElementById('panel-current'), arc = document.getElementById('panel-archive');
+  const keepFilter = document.getElementById('archive-filter');
+  const filterValue = keepFilter ? keepFilter.value : '';
+  cur.innerHTML = ''; arc.innerHTML = '';
+  _courseModel = [];
+  if(_lib.courseState === 'loading'){
+    cur.appendChild(skeletonList(3, 'Loading course quizzes…'));
+    arc.appendChild(skeletonList(3, 'Loading course quizzes…'));
+  } else if(_lib.courseState === 'error'){
+    const retry = () => loadManifest();
+    cur.appendChild(errorState('Couldn’t load course quizzes', _lib.courseError, retry));
+    arc.appendChild(errorState('Couldn’t load course quizzes', _lib.courseError, retry));
+  } else if(_lib.courseState === 'ready'){
+    _courseModel = buildCourseModel(_lib.courseSections, getShippedAttempts());
+    const split = splitBlocks(_courseModel);
+    renderCurrentPanel(cur, split);
+    renderArchivePanel(arc, split);
+    const f = document.getElementById('archive-filter');
+    if(f && filterValue){ f.value = filterValue; filterArchive(filterValue); }
+  }
+  syncTabs();
+}
+
+/* ── Demo (public manifest) ── */
+function publicEntries(){
+  return _lib.publicSections.flatMap(sec => (sec && Array.isArray(sec.quizzes) ? sec.quizzes : [])
+    .filter(q => q && q.id && q.file).map(q => ({ sec, entry: q })));
+}
+function renderDemo(){
+  const root = document.getElementById('shipped-root'), section = document.getElementById('demo-section');
+  root.innerHTML = '';
+  if(_lib.publicState === 'loading'){ section.hidden = false; root.appendChild(skeletonList(1, 'Loading the demo…')); return; }
+  if(_lib.publicState === 'error'){
+    section.hidden = false;
+    root.appendChild(errorState('Couldn’t load the demo', _lib.publicError, () => loadManifest()));
+    return;
+  }
+  const attempts = getShippedAttempts();
+  const secs = _lib.publicSections.filter(sec => sec && sec.id && Array.isArray(sec.quizzes) && sec.quizzes.some(q => q && q.id && q.file));
+  section.hidden = !secs.length;
+  secs.forEach(sec => {
+    const wrap = el('div', '');
+    wrap.dataset.sectionId = sec.id;
+    if(secs.length > 1) wrap.appendChild(el('h3', 'lib-sec__sub', sec.name || sec.id));
+    const list = el('div', 'qf-list');
+    sec.quizzes.filter(q => q && q.id && q.file).forEach(entry => {
+      const lec = normalizeEntry(entry, attempts);
+      list.appendChild(buildRow({ title: dash(entry.title || entry.id), num: String(lec.quiz.n),
+        meta: [entry.subtitle ? dash(entry.subtitle) : null, lec.quiz.n + ' questions'].filter(Boolean).join(' · '),
+        quiz: lec.quiz, progressRef: 'src::' + entry.file, data: { shippedId: entry.id } }));
+    });
+    wrap.appendChild(list);
+    root.appendChild(wrap);
+  });
+}
+
+/* ── Continue card: the single most recent unfinished quiz this view can show. ── */
+const RESUME_DISMISS_KEY = 'qf_resume_dismissed';
+function resumeCandidates(){
+  const out = [];
+  getQuizzes().forEach(qz => {
+    const p = savedProgress('id', qz.id);
+    if(p) out.push({ key: 'id::' + qz.id, title: dash(qz.title), p, href: 'quiz.html?id=' + encodeURIComponent(qz.id) });
+  });
+  publicEntries().forEach(({ entry }) => {
+    const p = savedProgress('src', entry.file);
+    if(p) out.push({ key: 'src::' + entry.file, title: dash(entry.title || entry.id), p, href: 'quiz.html?src=' + encodeURIComponent(entry.file) });
+  });
+  if(_lib.courseState === 'ready') _courseModel.forEach(b => b.weeks.forEach(w => w.lectures.forEach(l => {
+    const p = l.quiz.inProgress && savedProgress('src', l.entry.file);
+    if(p) out.push({ key: 'src::' + l.entry.file, p, href: l.quiz.href,
+      title: b.name + ' · ' + (l.kind === 'lec' ? 'Lec ' + Number(l.num) + ' ' : '') + l.title });
+  })));
+  return out;
+}
+function renderResume(){
+  const root = document.getElementById('resume-root');
+  root.innerHTML = '';
+  const seen = new Set();
+  const list = resumeCandidates().filter(c => !seen.has(c.key) && seen.add(c.key));
+  if(!list.length) return;
+  const c = list.reduce((a, b) => (Number(b.p.ts) || 0) > (Number(a.p.ts) || 0) ? b : a);
+  const stamp = c.key + '@' + (Number(c.p.ts) || 0);
+  if(store.get(RESUME_DISMISS_KEY, '') === stamp) return;
+  const card = el('section', 'qf-resume');
+  card.setAttribute('aria-labelledby', 'resume-title');
+  const text = el('div', '');
+  text.append(el('div', 'qf-resume__kicker', 'Pick up where you left off'), el('div', 'qf-resume__title', c.title),
+              el('div', 'qf-resume__state', 'Quiz · ' + c.p.answered + ' of ' + c.p.n + ' answered'));
+  text.children[1].id = 'resume-title';
+  const go = el('a', 'qf-btn qf-btn--primary', 'Resume quiz');
+  go.href = c.href; go.dataset.act = 'resume';
+  const bar = el('progress', 'qf-progress');
+  bar.max = c.p.n || 1; bar.value = Math.min(c.p.answered, c.p.n || 1);
+  bar.setAttribute('aria-label', c.p.answered + ' of ' + c.p.n + ' answered');
+  const close = el('button', 'qf-btn qf-btn--ghost qf-btn--sm qf-btn--icon qf-resume__close', '×');
+  close.type = 'button'; close.setAttribute('aria-label', 'Hide this until next time');
+  close.addEventListener('click', () => { store.set(RESUME_DISMISS_KEY, stamp); renderResume(); });
+  card.append(text, go, bar, close);
+  root.appendChild(card);
+}
+
+/* Everything the library shows, in one pass. */
+function renderAll(){
+  renderCourse();
+  renderDemo();
+  renderLibrary();
+}
+
+/* ── My quizzes (custom, stored in this browser) ── */
+function attemptsFor(quizId, scores){
+  return scores.filter(s => s && s.quizId === quizId)
+    .sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+}
+function moveToFolder(id, folderId){
+  const quizzes = getQuizzes(), idx = quizzes.findIndex(q => q.id === id);
+  if(idx === -1) return;
+  quizzes[idx].folderId = folderId || null;
+  const [moved] = quizzes.splice(idx, 1);
+  quizzes.unshift(moved);   /* top of its new folder, same as a drag-and-drop */
+  setQuizzes(quizzes);
+  if(folderId) expandedFolders.add(folderId);
+  renderLibrary(id);
+}
+function buildCard(qz, scores){
+  const n = qz.questions.length;
+  const quiz = quizSummary(attemptsFor(qz.id, scores), savedProgress('id', qz.id), n, 'quiz.html?id=' + encodeURIComponent(qz.id));
+  const folders = getFolders(), inFolder = folders.some(f => f.id === qz.folderId);
+  const moves = folders.filter(f => f.id !== qz.folderId).map(f => ({ label: 'Move to ' + f.name, run: () => moveToFolder(qz.id, f.id) }));
+  if(inFolder) moves.push({ label: 'Move to Unfiled', run: () => moveToFolder(qz.id, null) });
+  const menu = [{ label: 'Export', run: () => exportQuiz(qz.id) }].concat(moves.length ? [{ sep: true }] : [], moves,
+    [{ sep: true }, { label: 'Delete', danger: true, run: () => openDeleteModal(qz.id, qz.title) }]);
+  const row = buildRow({ title: dash(qz.title), num: String(n), quiz, menu, progressRef: 'id::' + qz.id,
+    meta: [qz.subtitle ? dash(qz.subtitle) : null, n + ' question' + (n === 1 ? '' : 's')].filter(Boolean).join(' · '),
+    data: { id: qz.id } });
+  row.classList.add('is-custom');
+  /* Drag handle: the number badge doubles as the grip (mouse only; menus cover keyboard moves). */
+  const grip = row.querySelector('.qf-lec__num');
+  grip.classList.add('is-grip'); grip.title = 'Drag to reorder';
+  row.draggable = true;
+  grip.addEventListener('mousedown', () => { dragFromHandle = true; });
+  row.addEventListener('mousedown', e => { if(e.target !== grip) dragFromHandle = false; });
+  row.addEventListener('dragstart', e => dndStart(e, qz.id));
+  row.addEventListener('dragover',  e => dndOver(e, row));
+  row.addEventListener('dragleave', () => dndLeaveCard(row));
+  row.addEventListener('drop',      e => dndDrop(e));
+  row.addEventListener('dragend',   () => dndCleanup());
+  return row;
+}
+function dropZone(folderId){
+  const dz = el('div', 'folder-drop-zone', 'Drag quizzes here');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); dndDropToFolder(folderId); });
+  return dz;
+}
+function quizList(quizzes, scores){
+  const list = el('div', 'qf-list');
+  quizzes.forEach(qz => list.appendChild(buildCard(qz, scores)));
+  return list;
+}
+function folderHeader(folder, count){
+  const hdr = el('div', 'folder-hdr');
+  hdr.dataset.folderId = folder.id;
+  const chev = el('button', 'folder-chevron' + (folder.collapsed ? '' : ' open'));
+  chev.type = 'button'; chev.dataset.folderId = folder.id;
+  chev.setAttribute('aria-expanded', String(!folder.collapsed));
+  chev.setAttribute('aria-label', (folder.collapsed ? 'Expand' : 'Collapse') + ' folder ' + folder.name);
+  chev.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l6 5-6 5"/></svg>';
+  chev.addEventListener('click', () => {
+    if(expandedFolders.has(folder.id)) expandedFolders.delete(folder.id); else expandedFolders.add(folder.id);
+    renderLibrary();
+    const again = document.querySelector('.folder-chevron[data-folder-id="' + (window.CSS && CSS.escape ? CSS.escape(folder.id) : folder.id) + '"]');
+    if(again) again.focus();
+  });
+  const menu = buildMenu('Folder options: ' + folder.name, [
+    { label: 'Rename', run: () => openRenameFolderModal(folder.id, folder.name) },
+    { label: 'Delete folder', danger: true, run: () => openDeleteFolderModal(folder.id, folder.name) }]);
+  menu.classList.add('folder-menu-btn');
+  hdr.append(chev, el('span', 'folder-name', folder.name), el('span', 'folder-count qf-num', String(count)), menu);
+  hdr.addEventListener('dragover', e => { e.preventDefault(); hdr.classList.add('drag-over-folder'); });
+  hdr.addEventListener('dragleave', () => hdr.classList.remove('drag-over-folder'));
+  hdr.addEventListener('drop', e => { e.preventDefault(); hdr.classList.remove('drag-over-folder'); dndDropToFolder(folder.id); });
+  return hdr;
+}
 function renderLibrary(flashId, quiet){
   const root = document.getElementById('library-root');
   const emptyEl = document.getElementById('library-empty');
@@ -1090,138 +1292,44 @@ function renderLibrary(flashId, quiet){
   const scores = getScores();
   const folders = getFolders();
   document.getElementById('custom-count').textContent = quizzes.length + (quizzes.length === 1 ? ' quiz' : ' quizzes');
-
   root.innerHTML = '';
-  if(quizzes.length === 0 && folders.length === 0){
-    if(emptyEl) emptyEl.style.display = 'block';
-    return;
-  }
-  if(emptyEl) emptyEl.style.display = 'none';
-
-  /* If no folders at all, just render a flat grid like the old layout. */
+  emptyEl.hidden = !(quizzes.length === 0 && folders.length === 0);
   if(folders.length === 0){
-    const grid = document.createElement('div');
-    grid.className = 'lib-grid';
-    quizzes.forEach(qz => grid.appendChild(buildCard(qz, scores)));
-    root.appendChild(grid);
+    if(quizzes.length) root.appendChild(quizList(quizzes, scores));
   } else {
-    /* Render each folder section */
     folders.forEach(folder => {
-      const folderQuizzes = quizzes.filter(qz => qz.folderId === folder.id);
-      const sec = document.createElement('div');
-      sec.className = 'folder-section';
+      const inside = quizzes.filter(qz => qz.folderId === folder.id);
+      const sec = el('div', 'folder-section');
       sec.dataset.folderId = folder.id;
-
-      const hdr = document.createElement('div');
-      hdr.className = 'folder-hdr';
-      hdr.dataset.folderId = folder.id;
-      hdr.innerHTML =
-        '<button class="folder-chevron' + (folder.collapsed ? '' : ' open') + '" aria-label="' + (folder.collapsed ? 'Expand' : 'Collapse') + ' folder" aria-expanded="' + !folder.collapsed + '" data-folder-id="' + esc(folder.id) + '">' +
-          '<svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg>' +
-        '</button>' +
-        '<span class="folder-name">' + esc(folder.name) + '</span>' +
-        '<span class="folder-count">' + folderQuizzes.length + '</span>' +
-        '<button class="folder-menu-btn" aria-label="Folder options" onclick="toggleFolderMenu(this,\'' + esc(folder.id) + '\')">' +
-          '<svg viewBox="0 0 20 20"><circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/></svg>' +
-        '</button>' +
-        '<div class="dropdown-menu" style="top:calc(100% + 4px);right:0;left:auto">' +
-          '<button class="move-item" onclick="openRenameFolderModal(\'' + esc(folder.id) + '\',\'' + esc(folder.name) + '\')">Rename</button>' +
-          '<button class="move-item" style="color:var(--bad)" onclick="openDeleteFolderModal(\'' + esc(folder.id) + '\',\'' + esc(folder.name) + '\')">Delete folder</button>' +
-        '</div>';
-
-      /* Chevron toggle */
-      hdr.querySelector('.folder-chevron').addEventListener('click', () => {
-        if(expandedFolders.has(folder.id)) expandedFolders.delete(folder.id);
-        else expandedFolders.add(folder.id);
-        renderLibrary();
-        root.querySelectorAll(".folder-chevron").forEach(btn => {
-          if(btn.dataset.folderId === folder.id) btn.focus();
-        });
-      });
-
-      /* DnD drop on folder header */
-      hdr.addEventListener('dragover', e => { e.preventDefault(); hdr.classList.add('drag-over-folder'); });
-      hdr.addEventListener('dragleave', () => hdr.classList.remove('drag-over-folder'));
-      hdr.addEventListener('drop', e => { e.preventDefault(); hdr.classList.remove('drag-over-folder'); dndDropToFolder(folder.id); });
-
-      sec.appendChild(hdr);
-
-      const gridWrap = document.createElement('div');
-      gridWrap.className = 'folder-grid-wrap' + (folder.collapsed ? ' collapsed' : '');
-
-      if(folderQuizzes.length === 0){
-        const dz = document.createElement('div');
-        dz.className = 'folder-drop-zone';
-        dz.textContent = 'Drag quizzes here';
-        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-        dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); dndDropToFolder(folder.id); });
-        gridWrap.appendChild(dz);
-      } else {
-        const grid = document.createElement('div');
-        grid.className = 'lib-grid';
-        folderQuizzes.forEach(qz => grid.appendChild(buildCard(qz, scores)));
-        gridWrap.appendChild(grid);
-      }
-      sec.appendChild(gridWrap);
+      const body = el('div', 'folder-grid-wrap' + (folder.collapsed ? ' collapsed' : ''));
+      body.appendChild(inside.length ? quizList(inside, scores) : dropZone(folder.id));
+      sec.append(folderHeader(folder, inside.length), body);
       root.appendChild(sec);
     });
-
-    /* Unfiled section -- always shown when folders exist so cards can be
-       dragged out of a folder even when Unfiled happens to be empty. */
-    const validFolderIds = new Set(folders.map(f => f.id));
-    const unfiledQuizzes = quizzes.filter(qz => !qz.folderId || !validFolderIds.has(qz.folderId));
-
-    const uf = document.createElement('div');
-    uf.className = 'unfiled-section';
-
-    /* Header is itself a drop target (drops to folderId null = Unfiled). */
-    const ufHdr = document.createElement('div');
-    ufHdr.className = 'unfiled-hdr';
-    ufHdr.textContent = 'Unfiled';
-    ufHdr.addEventListener('dragover',  e => { e.preventDefault(); ufHdr.classList.add('drag-over-folder'); });
-    ufHdr.addEventListener('dragleave', ()  => ufHdr.classList.remove('drag-over-folder'));
-    ufHdr.addEventListener('drop',      e => { e.preventDefault(); ufHdr.classList.remove('drag-over-folder'); dndDropToFolder(''); });
-    uf.appendChild(ufHdr);
-
-    if(unfiledQuizzes.length === 0){
-      /* Show the same dashed drop-zone as empty folders do. */
-      const dz = document.createElement('div');
-      dz.className = 'folder-drop-zone';
-      dz.textContent = 'Drag quizzes here';
-      dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
-      dz.addEventListener('dragleave', ()  => dz.classList.remove('drag-over'));
-      dz.addEventListener('drop',      e => { e.preventDefault(); dz.classList.remove('drag-over'); dndDropToFolder(''); });
-      uf.appendChild(dz);
-    } else {
-      const grid = document.createElement('div');
-      grid.className = 'lib-grid';
-      unfiledQuizzes.forEach(qz => grid.appendChild(buildCard(qz, scores)));
-      uf.appendChild(grid);
-    }
+    /* Unfiled is always shown when folders exist so quizzes can be dragged back out. */
+    const valid = new Set(folders.map(f => f.id));
+    const unfiled = quizzes.filter(qz => !qz.folderId || !valid.has(qz.folderId));
+    const uf = el('div', 'folder-section unfiled-section');
+    const ufHdr = el('div', 'unfiled-hdr', 'Unfiled (' + unfiled.length + ')');
+    ufHdr.addEventListener('dragover', e => { e.preventDefault(); ufHdr.classList.add('drag-over-folder'); });
+    ufHdr.addEventListener('dragleave', () => ufHdr.classList.remove('drag-over-folder'));
+    ufHdr.addEventListener('drop', e => { e.preventDefault(); ufHdr.classList.remove('drag-over-folder'); dndDropToFolder(''); });
+    uf.append(ufHdr, unfiled.length ? quizList(unfiled, scores) : dropZone(''));
     root.appendChild(uf);
   }
-
-  /* Flash the newly added card. `quiet` marks a card the user just dropped:
-     it is already under their cursor, so no scroll and no fade-in. */
   if(flashId){
     const cssId = window.CSS && CSS.escape ? CSS.escape(flashId) : flashId;
-    const el = root.querySelector('.lec[data-id="' + cssId + '"]');
-    if(el){
-      if(!quiet) el.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'center' });
-      el.classList.add('flash');
-      setTimeout(() => el.classList.remove('flash'), 1200);
-      if(motionOK() && !quiet){
-        el.style.transition = 'none';
-        anime({ targets: el, translateY: [10, 0], opacity: [0, 1], duration: 320, easing: EASE_FN,
-                complete: () => { el.style.opacity = ''; el.style.transform = ''; el.style.transition = ''; } });
-        unstickAfter([el], 1500);
-      }
+    const row = root.querySelector('.qf-lec[data-id="' + cssId + '"]');
+    if(row){
+      if(!quiet) row.scrollIntoView({ block: 'center' });
+      row.classList.add('flash');
+      setTimeout(() => row.classList.remove('flash'), 1200);
     }
   }
+  renderResume();
 }
 
-/* ── Prompt disclosure (right rail) ── */
+/* ── Prompt disclosure ── */
 function togglePromptDisclosure(){
   const disc = document.getElementById('prompt-disclosure');
   const btn  = document.getElementById('show-prompt-btn');
@@ -1250,7 +1358,7 @@ function dndStart(e, id){
   dragFadeTimer = setTimeout(() => {
     dragFadeTimer = null;
     if(draggingId !== id) return;
-    const el = document.querySelector('.lec[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+    const el = document.querySelector('.qf-lec[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
     if(el) el.classList.add('dragging');
   }, 0);
 }
@@ -1315,7 +1423,7 @@ function dndDropToFolder(folderId){
 }
 
 function dndCleanupIndicators(){
-  document.querySelectorAll('.lec').forEach(c => c.classList.remove('drop-before', 'drop-after'));
+  document.querySelectorAll('.qf-lec').forEach(c => c.classList.remove('drop-before', 'drop-after'));
   document.querySelectorAll('.folder-hdr, .unfiled-hdr').forEach(h => h.classList.remove('drag-over-folder'));
   document.querySelectorAll('.folder-drop-zone').forEach(dz => dz.classList.remove('drag-over'));
 }
@@ -1324,74 +1432,52 @@ function dndCleanup(){
   clearTimeout(dragFadeTimer);
   dragFadeTimer = null;
   /* Sweep every card: the dragged one may already have been re-rendered. */
-  document.querySelectorAll('.lec.dragging').forEach(c => c.classList.remove('dragging'));
+  document.querySelectorAll('.qf-lec.dragging').forEach(c => c.classList.remove('dragging'));
   dndCleanupIndicators();
   dragFromHandle = false;
   draggingId = null;
 }
 
-/* ── Folder menu toggle ── */
-function toggleFolderMenu(btn, folderId){
-  const menu = btn.parentElement.querySelector('.dropdown-menu');
-  if(!menu) return;
-  document.querySelectorAll('.dropdown-menu').forEach(m => { if(m !== menu) m.classList.remove('open'); });
-  menu.classList.toggle('open');
-}
 
 /* ── Folder CRUD ── */
 let folderModalMode = 'new';   /* 'new' or 'rename' */
 let folderModalId   = null;
-
 function openNewFolderModal(){
   folderModalMode = 'new'; folderModalId = null;
-  const ti = document.getElementById('folder-modal-title');
   const inp = document.getElementById('folder-name-input');
-  const save = document.getElementById('folder-modal-save');
-  if(ti) ti.textContent = 'New folder';
-  if(inp){ inp.value = ''; }
-  if(save) save.textContent = 'Create';
+  document.getElementById('folder-modal-title').textContent = 'New folder';
+  document.getElementById('folder-modal-save').textContent = 'Create';
+  inp.value = '';
   clearFolderModalErr();
-  document.getElementById('folder-modal-overlay').classList.add('open');
-  if(inp) setTimeout(() => inp.focus(), 40);
+  openDialog('folder-dialog', inp);
 }
-
 function openRenameFolderModal(id, currentName){
   folderModalMode = 'rename'; folderModalId = id;
-  const ti = document.getElementById('folder-modal-title');
   const inp = document.getElementById('folder-name-input');
-  const save = document.getElementById('folder-modal-save');
-  if(ti) ti.textContent = 'Rename folder';
-  if(inp){ inp.value = currentName; }
-  if(save) save.textContent = 'Save';
+  document.getElementById('folder-modal-title').textContent = 'Rename folder';
+  document.getElementById('folder-modal-save').textContent = 'Save';
+  inp.value = currentName;
   clearFolderModalErr();
-  document.getElementById('folder-modal-overlay').classList.add('open');
-  if(inp) setTimeout(() => { inp.focus(); inp.select(); }, 40);
+  openDialog('folder-dialog', inp);
+  setTimeout(() => inp.select(), 0);
 }
-
-function closeFolderModal(){
-  document.getElementById('folder-modal-overlay').classList.remove('open');
-  folderModalId = null;
-}
-
+function closeFolderModal(){ closeDialog('folder-dialog'); folderModalId = null; }
 function clearFolderModalErr(){
   const err = document.getElementById('folder-modal-err');
-  if(err){ err.style.display = 'none'; err.textContent = ''; }
+  err.hidden = true; err.textContent = '';
+  document.getElementById('folder-name-input').removeAttribute('aria-invalid');
 }
-
 function showFolderModalErr(msg){
   const err = document.getElementById('folder-modal-err');
-  if(err){ err.textContent = msg; err.style.display = 'block'; }
+  err.textContent = msg; err.hidden = false;
+  document.getElementById('folder-name-input').setAttribute('aria-invalid', 'true');
 }
-
 function folderModalKeydown(e){
   if(e.key === 'Enter'){ e.preventDefault(); saveFolderModal(); }
-  if(e.key === 'Escape'){ closeFolderModal(); }
 }
-
 function saveFolderModal(){
-  const inp = document.getElementById('folder-name-input');
-  const name = (inp ? inp.value : '').trim();
-  if(!name){ showFolderModalErr('Folder name cannot be empty.'); return; }
+  const name = document.getElementById('folder-name-input').value.trim();
+  if(!name){ showFolderModalErr('Give the folder a name.'); return; }
   const folders = getFolders();
   if(folderModalMode === 'new'){
     folders.push({ id: newFolderId(), name: name, collapsed: true });
@@ -1401,38 +1487,24 @@ function saveFolderModal(){
     if(idx !== -1){ folders[idx].name = name; setFolders(folders); }
   }
   closeFolderModal();
-  document.getElementById("custom-section").open = true;
   renderLibrary();
 }
-
 let pendingDeleteFolder = null;
-
 function openDeleteFolderModal(id, name){
   pendingDeleteFolder = id;
-  const dn = document.getElementById('del-folder-name');
-  if(dn) dn.textContent = name || 'this folder';
-  document.getElementById('del-folder-overlay').classList.add('open');
+  document.getElementById('del-folder-name').textContent = name || 'this folder';
+  openDialog('del-folder-dialog');
 }
-
-function closeDeleteFolderModal(){
-  pendingDeleteFolder = null;
-  document.getElementById('del-folder-overlay').classList.remove('open');
-}
-
+function closeDeleteFolderModal(){ pendingDeleteFolder = null; closeDialog('del-folder-dialog'); }
 function confirmDeleteFolder(){
   if(!pendingDeleteFolder){ closeDeleteFolderModal(); return; }
   const id = pendingDeleteFolder;
   closeDeleteFolderModal();
-  /* Move quizzes to unfiled */
-  const quizzes = getQuizzes().map(qz => {
-    if(qz.folderId === id){ const q2 = Object.assign({}, qz); q2.folderId = null; return q2; }
-    return qz;
-  });
-  setQuizzes(quizzes);
+  /* Quizzes in the folder move to Unfiled; they are not deleted. */
+  setQuizzes(getQuizzes().map(qz => qz.folderId === id ? Object.assign({}, qz, { folderId: null }) : qz));
   setFolders(getFolders().filter(f => f.id !== id));
   renderLibrary();
 }
-
 /* ── Export a single quiz as canonical JSON ── */
 function exportQuiz(id){
   const qz = getQuizzes().find(x => x.id === id);
@@ -1457,52 +1529,26 @@ function exportQuiz(id){
 }
 
 /* ── Delete (via modal, never confirm()) ── */
+
+/* ── Delete a custom quiz (dialog, never confirm()) ── */
 let pendingDelete = null;
 function openDeleteModal(id, title){
   pendingDelete = id;
   document.getElementById('del-name').textContent = dash(title || 'this quiz');
-  document.getElementById('del-overlay').classList.add('open');
+  openDialog('del-dialog');
 }
-function closeDeleteModal(){
-  pendingDelete = null;
-  document.getElementById('del-overlay').classList.remove('open');
-}
+function closeDeleteModal(){ pendingDelete = null; closeDialog('del-dialog'); }
 function confirmDelete(){
   if(!pendingDelete){ closeDeleteModal(); return; }
   const id = pendingDelete;
   closeDeleteModal();
-  const finish = () => {
-    setQuizzes(getQuizzes().filter(q => q.id !== id));
-    setScores(getScores().filter(s => !s || s.quizId !== id));
-    try { localStorage.removeItem('qf_progress::id::' + id); } catch(e) {}  /* drop any half-done attempt */
-    renderLibrary();
-  };
-  const el = document.querySelector('.lec[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
-  if(el && motionOK()){
-    /* run finish exactly once, even if the animation stalls and the fallback fires */
-    let done = false;
-    const finishOnce = () => { if(!done){ done = true; finish(); } };
-    el.style.transition = 'none';
-    anime({ targets: el, opacity: [1, 0], scale: [1, .98], duration: 200, easing: EASE_FN, complete: finishOnce });
-    setTimeout(finishOnce, 800);
-  } else {
-    finish();
-  }
+  setQuizzes(getQuizzes().filter(q => q.id !== id));
+  setScores(getScores().filter(s => !s || s.quizId !== id));
+  try { localStorage.removeItem('qf_progress::id::' + id); } catch(e) {}  /* drop any half-done attempt */
+  renderLibrary();
 }
-document.addEventListener('keydown', e => {
-  if(e.key !== 'Escape') return;
-  if(document.getElementById('del-overlay').classList.contains('open'))        closeDeleteModal();
-  if(document.getElementById('folder-modal-overlay').classList.contains('open')) closeFolderModal();
-  if(document.getElementById('del-folder-overlay').classList.contains('open'))   closeDeleteFolderModal();
-  if(document.getElementById('unlock-overlay').classList.contains('open'))     closeUnlockModal();
-});
-/* Close card/folder move menus on outside click */
-document.addEventListener('click', e => {
-  if(!e.target.closest('.dropdown') && !e.target.closest('.folder-menu-btn'))
-    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
-});
 
-/* ── Settings (theme / accent / text size) ── */
+/* ── Settings (theme / accent / text size). Keys unchanged. ── */
 const THEME_KEY = 'quizTheme', ACCENT_KEY = 'quizAccent', SCALE_KEY = 'quizTextScale';
 /* petrol was the old default; treat it as examplify */
 function resolvedAccent(){ const a = store.get(ACCENT_KEY, 'examplify'); return (a === 'petrol' || !a) ? 'examplify' : a; }
@@ -1518,11 +1564,10 @@ function applySettings(){
   syncSettingsUI();
 }
 function syncSettingsUI(){
-  const theme = store.get(THEME_KEY, 'system'),
-        accent = resolvedAccent(),
+  const theme = store.get(THEME_KEY, 'system'), accent = resolvedAccent(),
         scale = parseFloat(store.get(SCALE_KEY, '1')) || 1;
-  document.querySelectorAll('#seg-theme .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.themeVal === theme));
-  document.querySelectorAll('#sw-accent .sw').forEach(b => b.classList.toggle('active', b.dataset.accentVal === accent));
+  document.querySelectorAll('#seg-theme button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeVal === theme)));
+  document.querySelectorAll('#sw-accent .qf-swatch').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.accentVal === accent)));
   const slider = document.getElementById('size-slider'); if(slider) slider.value = scale;
   const ro = document.getElementById('size-readout'); if(ro) ro.textContent = Math.round(scale * 100) + '%';
 }
@@ -1532,326 +1577,6 @@ function setScale(v){ store.set(SCALE_KEY, String(v)); applySettings(); }
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => {
   if(store.get(THEME_KEY, 'system') === 'system') applySettings();
 });
-
-/* ── Dropdown (settings topbar) ── */
-function toggleDropdown(id){
-  document.querySelectorAll('.dropdown-menu').forEach(m => {
-    if(m.id !== id + '-menu') m.classList.remove('open');
-  });
-  document.getElementById(id + '-menu').classList.toggle('open');
-}
-
-/* ── HTML sanitizer ─────────────────────────────────────────────────────────
-   sanitizeHtml(rawHtml, context)
-   context: 'shipped' - only quizzes/media/ img src allowed
-            'pasted'  - also data:image/(png|jpeg|gif|webp);base64, ≤2MB
-   Template-element walking. Allowed tags: strong, em, br, table, thead, tbody,
-   tr, th, td, img. img: only src (policy-gated) and alt. All on-event handlers,
-   style, class and other attrs stripped. REMOVE tags (script/iframe/object/embed/
-   svg) dropped with entire subtree. Other disallowed tags unwrapped (text kept). */
-function sanitizeHtml(rawHtml, context) {
-  var ALLOWED = {strong:1,em:1,br:1,table:1,thead:1,tbody:1,tr:1,th:1,td:1,img:1};
-  var REMOVE  = {script:1,iframe:1,object:1,embed:1,svg:1};
-  function allowedSrc(src) {
-    if (/^quizzes\/media\/[A-Za-z0-9._-]+$/.test(src)) return true;
-    if (context !== 'pasted') return false;
-    var m = src.match(/^data:image\/(png|jpeg|gif|webp);base64,([A-Za-z0-9+/]+=*)$/);
-    if (!m) return false;
-    return Math.floor(m[2].length * 3 / 4) <= 2097152; /* 2 MB */
-  }
-  function walk(node) {
-    var i = 0, child, tag, attrs, n, a;
-    while (i < node.childNodes.length) {
-      child = node.childNodes[i];
-      if (child.nodeType === 3) { i++; continue; }
-      if (child.nodeType !== 1) { node.removeChild(child); continue; }
-      tag = child.tagName.toLowerCase();
-      if (REMOVE[tag]) { node.removeChild(child); continue; }
-      if (!ALLOWED[tag]) {
-        while (child.firstChild) node.insertBefore(child.firstChild, child);
-        node.removeChild(child);
-        continue;
-      }
-      attrs = Array.prototype.slice.call(child.attributes);
-      for (n = 0; n < attrs.length; n++) {
-        a = attrs[n];
-        var aName = a.name.toLowerCase();
-        if (tag === 'img' && aName === 'alt') continue;
-        if (tag === 'img' && aName === 'src' && allowedSrc(a.value)) continue;
-        child.removeAttribute(a.name);
-      }
-      walk(child);
-      i++;
-    }
-  }
-  var tpl = document.createElement('template');
-  tpl.innerHTML = rawHtml || '';
-  walk(tpl.content);
-  var div = document.createElement('div');
-  div.appendChild(tpl.content.cloneNode(true));
-  return div.innerHTML;
-}
-
-/* ── Shipped-attempt storage ─────────────────────────────────────────────── */
-const SHIPPED_ATTEMPTS_KEY = 'qf_shipped_attempts';
-function getShippedAttempts(){
-  try{ const a = JSON.parse(store.get(SHIPPED_ATTEMPTS_KEY, '[]')); return Array.isArray(a) ? a : []; }catch(e){ return []; }
-}
-
-/* Build a single shipped quiz card (immutable - no drag, delete, or export). */
-function buildShippedCard(entry, allAttempts) {
-  const atts = allAttempts.filter(a => a && a.quizId === entry.id)
-    .sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
-  const last = atts.length ? atts[atts.length - 1] : null;
-  let dot = 'none', dotT = 'No attempts yet';
-  if(last){
-    if(last.pct >= 70){ dot = 'good'; dotT = 'Last attempt ' + last.pct + '%'; }
-    else { dot = 'warn'; dotT = 'Last attempt ' + last.pct + '% - needs work'; }
-  }
-
-  const n = entry.question_count;
-
-  /* Score pills (safe: numeric attempt data only) */
-  let scoreHtml;
-  if(atts.length){
-    const shown = atts.slice(-8);
-    const lead = atts.length > 8 ? '... ' : '';
-    const pills = lead + shown.map((a, i) =>
-      '<span class="pill ' + (a.pct >= 70 ? 'p-good' : 'p-bad') +
-      (i === shown.length - 1 ? ' p-last' : '') + '">' + a.score + '/' + a.total + '</span>'
-    ).join('');
-    const best = Math.max.apply(null, atts.map(a => a.pct));
-    scoreHtml = '<div class="pills">' + pills + '</div><span class="best">best ' + best + '%</span>';
-  } else {
-    scoreHtml = '<span class="noatt">no attempts yet</span>';
-  }
-
-  const card = document.createElement('section');
-  card.className = 'lec';
-  card.dataset.shippedId = entry.id;
-  /* No draggable attr and no drag listeners - shipped cards are immutable */
-
-  /* Header */
-  const badge = document.createElement('span');
-  badge.className = 'badge';
-  badge.title = n + ' questions';
-  badge.setAttribute('aria-label', n + ' questions');
-  badge.textContent = n;
-
-  const titleDiv = document.createElement('div');
-  titleDiv.className = 'q-title';
-  titleDiv.textContent = dash(entry.title);   /* textContent - safe */
-
-  const lecTitle = document.createElement('div');
-  lecTitle.className = 'lec-title';
-  lecTitle.appendChild(titleDiv);
-
-  if(entry.subtitle){
-    const subDiv = document.createElement('div');
-    subDiv.className = 'q-sub';
-    subDiv.textContent = dash(entry.subtitle); /* textContent - safe */
-    lecTitle.appendChild(subDiv);
-  }
-
-  const dotEl = document.createElement('span');
-  dotEl.className = 'dot dot-' + dot;
-  dotEl.title = dotT;
-
-  const lecHead = document.createElement('div');
-  lecHead.className = 'lec-head';
-  lecHead.appendChild(badge);
-  lecHead.appendChild(lecTitle);
-  lecHead.appendChild(dotEl);
-
-  /* Score row */
-  const qscore = document.createElement('div');
-  qscore.className = 'qscore';
-  qscore.innerHTML = scoreHtml; /* safe: numeric attempt data */
-
-  if(typeof entry.revision === 'number'){
-    const revSpan = document.createElement('span');
-    revSpan.className = 'best';
-    revSpan.style.marginLeft = '8px';
-    revSpan.textContent = 'r' + entry.revision;
-    qscore.appendChild(revSpan);
-  }
-
-  const scoreRow = document.createElement('div');
-  scoreRow.className = 'row';
-  scoreRow.appendChild(qscore);
-
-  /* Take link - href built from validated manifest entry.file */
-  const takeLink = document.createElement('a');
-  takeLink.className = 'take';
-  takeLink.href = 'quiz.html?src=' + encodeURIComponent(entry.file);
-  /* innerHTML safe: all content is hardcoded, not manifest-derived */
-  takeLink.innerHTML = takeLabel(savedProgress('src', entry.file)); /* numbers only */
-
-  const actionsRow = document.createElement('div');
-  actionsRow.className = 'row actions-row';
-  actionsRow.appendChild(takeLink);
-
-  /* Watch-along link: only protected lectures listed in the decrypted watch index. */
-  if(_mixedUnlocked && _watchIds.has(entry.id) && /^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/.test(entry.file)){
-    const watchLink = document.createElement('a');
-    watchLink.className = 'take take-watch';
-    watchLink.href = 'watch.html?id=' + encodeURIComponent(entry.id);
-    watchLink.textContent = 'Watch-along';
-    actionsRow.appendChild(watchLink);
-  }
-
-  const rows = document.createElement('div');
-  rows.className = 'rows';
-  rows.appendChild(scoreRow);
-  rows.appendChild(actionsRow);
-
-  card.appendChild(lecHead);
-  card.appendChild(rows);
-  return card;
-}
-
-/* Keep the encrypted manifest flat. Its stable quiz IDs supply the Block. */
-function groupProtectedSections(sections){
-  const blocks = new Map();
-  sections.forEach(sec => {
-    if(!sec || !Array.isArray(sec.quizzes)) return;
-    sec.quizzes.forEach(entry => {
-      if(!entry || !entry.id || !entry.file) return;
-      const match = String(entry.id).match(/^(.+)-w\d{2}-/i);
-      const id = match ? match[1].toLowerCase() : 'other';
-      if(!blocks.has(id)) blocks.set(id, {
-        id: 'block-' + id,
-        name: id === 'cardio' ? 'Cardiovascular' : id === 'other' ? 'Other quizzes' : id.replace(/-/g, ' ').toUpperCase(),
-        sections: []
-      });
-      const block = blocks.get(id);
-      let week = block.sections.find(w => w.id === sec.id);
-      if(!week){ week = { id: sec.id, name: sec.name, quizzes: [] }; block.sections.push(week); }
-      week.quizzes.push(entry);
-    });
-  });
-  blocks.forEach(block => block.sections.sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true })));
-  return Array.from(blocks.values());
-}
-
-/* Only called for blocks from a successfully decrypted protected manifest. */
-function buildMixedTest(block){
-  const panel = document.createElement('details');
-  panel.className = 'mixed-builder';
-  const heading = document.createElement('summary');
-  heading.textContent = 'Build Test';
-  const form = document.createElement('form');
-  form.className = 'mixed-form';
-  const choices = [], seen = new Set();
-  const actions = document.createElement('div');
-  actions.className = 'mixed-actions';
-  ['Select All', 'Clear'].forEach((title, i) => {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'btn btn-ghost btn-sm'; button.textContent = title;
-    button.addEventListener('click', () => { choices.forEach(c => c.input.checked = i === 0); update(); });
-    actions.appendChild(button);
-  });
-  form.appendChild(actions);
-  block.sections.forEach(week => {
-    const group = document.createElement('fieldset');
-    const legend = document.createElement('legend'); legend.textContent = week.name || week.id;
-    group.appendChild(legend);
-    week.quizzes.forEach(entry => {
-      if(seen.has(entry.id) || !/^quizzes\/protected\/[A-Za-z0-9._-]+\.enc$/.test(entry.file)) return;
-      seen.add(entry.id);
-      const label = document.createElement('label'); label.className = 'mixed-choice';
-      const input = document.createElement('input'); input.type = 'checkbox'; input.value = entry.id;
-      input.addEventListener('change', update);
-      const name = document.createElement('span'); name.textContent = dash(entry.title);
-      label.append(input, name); group.appendChild(label);
-      choices.push({input, count: Math.max(0, Number(entry.question_count) || 0)});
-    });
-    if(group.querySelector('input')) form.appendChild(group);
-  });
-  const controls = document.createElement('div'); controls.className = 'mixed-actions';
-  const label = document.createElement('label'); label.textContent = 'Questions';
-  const count = document.createElement('input');
-  count.type = 'number'; count.className = 'mixed-count'; count.min = '1'; count.step = '1'; count.value = '20'; count.required = true;
-  count.addEventListener('input', update); label.appendChild(count);
-  const available = document.createElement('span'); available.className = 'mixed-note'; available.setAttribute('aria-live', 'polite');
-  const start = document.createElement('button'); start.type = 'submit'; start.className = 'btn btn-primary btn-sm'; start.textContent = 'Start Test';
-  controls.append(label, available, start);
-  const note = document.createElement('p'); note.className = 'mixed-note';
-  note.textContent = 'Random questions, balanced across lectures. Results are for this run only. Reloading starts a new mix and resets progress.';
-  const error = document.createElement('p'); error.className = 'mixed-note'; error.setAttribute('role', 'alert');
-  form.append(controls, note, error);
-  function update(){
-    const picked = choices.filter(c => c.input.checked);
-    const total = picked.reduce((n, c) => n + c.count, 0), n = Number(count.value);
-    count.max = String(total);
-    available.textContent = total + ' available';
-    start.disabled = !picked.length || !Number.isSafeInteger(n) || n < 1 || n > total;
-    error.textContent = '';
-  }
-  form.addEventListener('submit', event => {
-    event.preventDefault(); update();
-    if(start.disabled) return;
-    if(!_mixedUnlocked || !store.get(UNLOCK_PW_KEY, '')) { lockSite(); return; }
-    try {
-      sessionStorage.setItem('qf_mixed_recipe', JSON.stringify({quizIds: choices.filter(c => c.input.checked).map(c => c.input.value), count: Number(count.value)}));
-      location.href = 'quiz.html?mixed=1';
-    } catch(e) { error.textContent = 'Browser storage is unavailable. Enable it to start a mixed test.'; }
-  });
-  update(); panel.append(heading, form); return panel;
-}
-
-/* Native details provide keyboard support and start collapsed on every load. */
-function renderShippedSections(sections){
-  const root = document.getElementById('shipped-root');
-  if(!root) return;
-  root.innerHTML = '';
-  const attempts = getShippedAttempts();
-  function buildSection(sec){
-    if(!sec || !sec.id) return null;
-    const quizzes = (sec.sections ? sec.sections.flatMap(w => w.quizzes || []) : sec.quizzes || [])
-      .filter(q => q && q.id && q.file);
-    if(!quizzes.length) return null;
-    const folder = document.createElement('details');
-    folder.className = 'folder-section';
-    folder.dataset.sectionId = sec.id;
-    const header = document.createElement('summary');
-    header.className = 'folder-hdr';
-    const chevron = document.createElement('span');
-    chevron.className = 'folder-chevron';
-    chevron.setAttribute('aria-hidden', 'true');
-    chevron.innerHTML = '<svg viewBox="0 0 20 20"><path d="M7 5l6 5-6 5"/></svg>';
-    const name = document.createElement('span');
-    name.className = 'folder-name';
-    name.textContent = sec.name || sec.id;
-    const count = document.createElement('span');
-    count.className = 'folder-count';
-    count.textContent = quizzes.length + (quizzes.length === 1 ? ' quiz' : ' quizzes');
-    header.append(chevron, name, count);
-    folder.appendChild(header);
-    const body = document.createElement('div');
-    body.className = 'folder-grid-wrap';
-    if(sec.sections){
-      if(_mixedUnlocked) body.appendChild(buildMixedTest(sec));
-      sec.sections.forEach(week => { const child = buildSection(week); if(child) body.appendChild(child); });
-    } else {
-      const grid = document.createElement('div');
-      grid.className = 'lib-grid';
-      quizzes.forEach(q => grid.appendChild(buildShippedCard(q, attempts)));
-      body.appendChild(grid);
-    }
-    folder.appendChild(body);
-    return folder;
-  }
-  sections.forEach(sec => { const folder = buildSection(sec); if(folder) root.appendChild(folder); });
-}
-
-/* Show a warning banner in the shipped area (text only - safe). */
-function showShippedBanner(msg) {
-  const el = document.getElementById('shipped-banner');
-  if(!el) return;
-  el.textContent = msg;
-  el.classList.add('visible');
-}
 
 /* ── QFE1 Crypto helper (duplicated inline; identical to quiz.html) ─────���────
    _qfeDeriveKey(passphrase, saltB64, usage?) → Promise<CryptoKey>
@@ -1878,7 +1603,6 @@ const UNLOCK_PW_KEY = 'qf_unlock_pw';
 let _mixedUnlocked = false, _manifestLoadId = 0;
 let _protSalt = null;          /* base64 salt from public manifest.protected.kdf */
 let _protManifestUrl = null;   /* URL string from public manifest.protected.manifest */
-let _watchIds = new Set();     /* quiz ids with a watch-along (from the encrypted watch index) */
 let _protKeyMemo = null;       /* {pw, salt, key}: derive the key once per unlock */
 
 async function _protKey(pw) {
@@ -1888,19 +1612,6 @@ async function _protKey(pw) {
   catch (e) { _protKeyMemo = null; throw e; }
 }
 
-/* Quiz ids that have a watch-along. Any failure (no index yet, offline) means none. */
-async function _fetchWatchIds(pw) {
-  try {
-    const key = await _protKey(pw);
-    const r = await fetch('quizzes/protected/watch/index.enc?v=' + Date.now());
-    if (!r.ok) return new Set();
-    const idx = JSON.parse(new TextDecoder().decode(await _qfeDecrypt(await r.arrayBuffer(), key)));
-    return new Set((idx && Array.isArray(idx.watch) ? idx.watch : [])
-      .map(e => e && e.quiz_id).filter(id => typeof id === 'string'));
-  } catch (e) {
-    return new Set();
-  }
-}
 
 /* Try to load + decrypt the protected manifest. Throws on any failure. */
 async function _fetchProtectedManifest(pw) {
@@ -1921,47 +1632,47 @@ function _showLockControl(visible) {
   if (btn) btn.style.display = visible ? '' : 'none';
 }
 
-/* Clear qf_unlock_pw and re-render the page without protected content. */
-function lockSite() {
-  _mixedUnlocked = false;
-  _watchIds = new Set(); _protKeyMemo = null;
-  try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
-  try { localStorage.removeItem(UNLOCK_PW_KEY); } catch(e) {}
-  _showLockControl(false);
-  document.getElementById('shipped-root').innerHTML = '';
-  const ch = document.getElementById('custom-heading');
-  if (ch) ch.style.display = 'none';
-  loadManifest();
-}
 
+/* Forget the passphrase and drop every bit of course data from the page. */
+function _forgetCourse(){
+  _mixedUnlocked = false; _protKeyMemo = null;
+  try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
+  closeMixedSheet();
+  _lib.courseState = 'locked'; _lib.courseSections = null; _lib.courseError = '';
+  _showLockControl(false);
+}
+function lockSite() {
+  _manifestLoadId++;   /* any in-flight load must not re-render course data */
+  _forgetCourse();
+  try { localStorage.removeItem(UNLOCK_PW_KEY); } catch(e) {}
+  renderAll();
+}
 window.addEventListener('storage', event => {
   if(event.key === null || (event.key === UNLOCK_PW_KEY && event.newValue !== event.oldValue)) {
-    _mixedUnlocked = false;
-    _watchIds = new Set(); _protKeyMemo = null;
-    try { sessionStorage.removeItem('qf_mixed_recipe'); } catch(e) {}
-    document.getElementById('shipped-root').innerHTML = '';
-    _showLockControl(false);
+    _manifestLoadId++;
+    _forgetCourse();
+    renderAll();
     loadManifest();
   }
 });
 
-/* Passphrase modal functions */
+/* ── Passphrase dialog ── */
 function openUnlockModal() {
   const inp = document.getElementById('unlock-pw-input');
   const err = document.getElementById('unlock-modal-err');
   const btn = document.getElementById('unlock-modal-btn');
-  if (inp) inp.value = '';
-  if (err) err.style.display = 'none';
-  if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
-  document.getElementById('unlock-overlay').classList.add('open');
-  if (inp) setTimeout(() => inp.focus(), 40);
+  inp.value = ''; inp.removeAttribute('aria-invalid');
+  err.hidden = true; err.textContent = '';
+  btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = 'Unlock';
+  openDialog('unlock-dialog', inp);
 }
 function closeUnlockModal() {
-  document.getElementById('unlock-overlay').classList.remove('open');
+  const inp = document.getElementById('unlock-pw-input');
+  if (inp) inp.value = '';
+  closeDialog('unlock-dialog');
 }
 function unlockModalKeydown(e) {
   if (e.key === 'Enter') { e.preventDefault(); attemptUnlock(); }
-  if (e.key === 'Escape') { closeUnlockModal(); }
 }
 async function attemptUnlock() {
   const inp = document.getElementById('unlock-pw-input');
@@ -1969,20 +1680,25 @@ async function attemptUnlock() {
   const btn = document.getElementById('unlock-modal-btn');
   const pw = inp ? inp.value : '';
   if (!pw) return;
-  if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
-  if (errEl) errEl.style.display = 'none';
+  btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.textContent = 'Checking…';
+  errEl.hidden = true;
   try {
-    await _fetchProtectedManifest(pw); /* validate by decrypting */
+    const pm = await _fetchProtectedManifest(pw); /* validate by decrypting */
     store.set(UNLOCK_PW_KEY, pw);
     closeUnlockModal();
-    /* Re-render: clear shipped-root so loadManifest can rebuild from scratch */
-    document.getElementById('shipped-root').innerHTML = '';
-    const ch = document.getElementById('custom-heading');
-    if (ch) ch.style.display = 'none';
-    loadManifest();
+    _manifestLoadId++;
+    _mixedUnlocked = true;
+    _lib.courseSections = pm.sections; _lib.courseState = 'ready';
+    _showLockControl(true);
+    selectTab('current');
+    renderAll();
   } catch(e) {
-    if (errEl) { errEl.textContent = 'Incorrect passphrase'; errEl.style.display = 'block'; }
-    if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
+    const wrongKey = e && (e.name === 'OperationError' || /QFE1|JSON|invalid/i.test(String(e.message)));
+    errEl.textContent = wrongKey ? 'That passphrase didn\'t work.'
+      : 'Couldn\'t check the passphrase: ' + (e && e.message ? e.message : 'unknown error') + '. Try again.';
+    errEl.hidden = false;
+    inp.setAttribute('aria-invalid', 'true');
+    btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = 'Unlock';
   }
 }
 
@@ -2007,15 +1723,110 @@ async function attemptUnlock() {
   });
 })();
 
-/* ── Shipped-quiz manifest loader ─────────────────────────────────────────────
-   Loads the public manifest (always).
-   If manifest.protected exists and qf_unlock_pw is set: tries to also load
-   the encrypted protected manifest and prepends its sections.
-   If not unlocked: the page renders exactly like a public QuizForge. */
+/* ── Build test (mixed test). Only for blocks from a decrypted manifest. ── */
+function buildMixedTest(block){
+  const form = el('form', 'mixed-form mixed-builder');
+  form.dataset.block = block.slug;
+  const choices = [], seen = new Set();
+  const actions = el('div', 'mixed-actions');
+  ['Select all', 'Clear'].forEach((title, i) => {
+    const button = el('button', 'qf-btn qf-btn--sm', title);
+    button.type = 'button';
+    button.addEventListener('click', () => { choices.forEach(c => c.input.checked = i === 0); update(); });
+    actions.appendChild(button);
+  });
+  form.appendChild(actions);
+  block.weeks.forEach(week => {
+    const group = el('fieldset');
+    group.appendChild(el('legend', '', week.label));
+    week.lectures.forEach(lec => {
+      const entry = lec.entry;
+      if(seen.has(entry.id) || !PROTECTED_FILE_RE.test(entry.file)) return;
+      seen.add(entry.id);
+      const label = el('label', 'mixed-choice');
+      const input = el('input'); input.type = 'checkbox'; input.value = entry.id;
+      input.addEventListener('change', update);
+      label.append(input, el('span', '', (lec.kind === 'lec' ? 'Lec ' + Number(lec.num) + ' · ' : '') + lec.title));
+      group.appendChild(label);
+      choices.push({ input, count: Math.max(0, Number(entry.question_count) || 0) });
+    });
+    if(group.querySelector('input')) form.appendChild(group);
+  });
+  const controls = el('div', 'mixed-actions');
+  const label = el('label', '', 'Questions');
+  const count = el('input', 'mixed-count');
+  count.type = 'number'; count.min = '1'; count.step = '1'; count.value = '20'; count.required = true;
+  count.addEventListener('input', update); label.appendChild(count);
+  const available = el('span', 'mixed-note'); available.setAttribute('aria-live', 'polite');
+  const start = el('button', 'qf-btn qf-btn--primary qf-btn--sm', 'Start test'); start.type = 'submit';
+  controls.append(label, available, start);
+  const note = el('p', 'mixed-note', 'Random questions, balanced across lectures. Results are for this run only. Reloading starts a new mix and resets progress.');
+  const error = el('p', 'mixed-note'); error.setAttribute('role', 'alert');
+  form.append(controls, note, error);
+  function update(){
+    const picked = choices.filter(c => c.input.checked);
+    const total = picked.reduce((n, c) => n + c.count, 0), n = Number(count.value);
+    count.max = String(total);
+    available.textContent = total + ' available';
+    start.disabled = !picked.length || !Number.isSafeInteger(n) || n < 1 || n > total;
+    error.textContent = '';
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault(); update();
+    if(start.disabled) return;
+    if(!_mixedUnlocked || !store.get(UNLOCK_PW_KEY, '')) { lockSite(); return; }
+    try {
+      sessionStorage.setItem('qf_mixed_recipe', JSON.stringify({quizIds: choices.filter(c => c.input.checked).map(c => c.input.value), count: Number(count.value)}));
+      location.href = 'quiz.html?mixed=1';
+    } catch(e) { error.textContent = 'Browser storage is unavailable. Enable it to start a mixed test.'; }
+  });
+  update();
+  return form;
+}
+function openMixedSheet(slug){
+  const block = _courseModel.find(b => b.slug === slug);
+  if(!block || !_mixedUnlocked) return;
+  const body = document.getElementById('mixed-body');
+  body.innerHTML = '';
+  body.appendChild(buildMixedTest(block));
+  document.getElementById('mixed-title').textContent = 'Build a test · ' + block.name;
+  openDialog('mixed-sheet', body.querySelector('button'));
+}
+function closeMixedSheet(){
+  const body = document.getElementById('mixed-body');
+  if(body) body.innerHTML = '';
+  closeDialog('mixed-sheet');
+}
+
+/* ── Manifest loader ─────────────────────────────────────────────────────────
+   Always loads the public manifest (Demo). Only when this device holds a
+   passphrase does it also decrypt the protected manifest; otherwise the page
+   is an ordinary public QuizForge. Every load turns into an error after 8 s. */
+function _describeLoadError(e){
+  if(e && e.name === 'OperationError') return 'The saved passphrase no longer opens these quizzes. Lock, then unlock again.';
+  return (e && e.message) ? e.message : 'Unknown error';
+}
 function loadManifest() {
-  if(location.protocol === 'file:') return;
   const loadId = ++_manifestLoadId;
   _mixedUnlocked = false;
+  if(location.protocol === 'file:'){
+    _lib.publicState = 'ready'; _lib.publicSections = [];
+    _lib.courseState = 'locked';
+    renderAll();
+    return;
+  }
+  const pw = store.get(UNLOCK_PW_KEY, '');
+  _lib.publicState = 'loading';
+  _lib.courseState = pw ? 'loading' : 'locked';
+  _lib.courseSections = null;
+  renderAll();
+  const timer = setTimeout(() => {
+    if(loadId !== _manifestLoadId) return;
+    let changed = false;
+    if(_lib.publicState === 'loading'){ _lib.publicState = 'error'; _lib.publicError = TIMEOUT_MSG; changed = true; }
+    if(_lib.courseState === 'loading'){ _lib.courseState = 'error'; _lib.courseError = TIMEOUT_MSG; changed = true; }
+    if(changed) renderAll();
+  }, LOAD_TIMEOUT_MS);
   fetch('quizzes/manifest.json?v=' + Date.now())
     .then(r => {
       if(!r.ok) throw new Error('HTTP ' + r.status);
@@ -2024,42 +1835,40 @@ function loadManifest() {
     .then(async function(data) {
       if(!data || data.schema_version !== 1 || !Array.isArray(data.sections))
         throw new Error('invalid manifest schema');
-
-      /* Stash protected metadata for the hidden trigger and unlock modal */
+      if(loadId !== _manifestLoadId) return;
+      /* Stash protected metadata for the hidden trigger and unlock dialog */
       if (data.protected && data.protected.kdf && data.protected.manifest) {
         _protSalt = data.protected.kdf.salt;
         _protManifestUrl = data.protected.manifest;
       } else {
         _protSalt = null; _protManifestUrl = null;
       }
-
-      let allSections = data.sections.slice(); /* starts with demo */
-
-      if (_protSalt && _protManifestUrl) {
-        const pw = store.get(UNLOCK_PW_KEY, '');
-        if (pw) {
-          try {
-            const pm = await _fetchProtectedManifest(pw);
-            const watchIds = await _fetchWatchIds(pw);
-            if(loadId !== _manifestLoadId || store.get(UNLOCK_PW_KEY, '') !== pw) return;
-            _watchIds = watchIds;
-            _mixedUnlocked = true;
-            /* Protected Blocks contain existing Week groups; Demo stays public. */
-            allSections = groupProtectedSections(pm.sections).concat(allSections);
-            _showLockControl(true);
-          } catch(e) {
-            _showLockControl(false);
-            showShippedBanner('Protected quizzes unavailable — ' + (e && e.message ? e.message : 'decrypt failed'));
-          }
-        }
-        /* If not unlocked: render nothing about protected content */
+      _lib.publicSections = data.sections.slice(); _lib.publicState = 'ready';
+      if(!pw || !_protSalt || !_protManifestUrl){
+        _lib.courseState = 'locked'; _showLockControl(false);
+        renderAll();
+        return;
       }
-
-      if(loadId === _manifestLoadId) renderShippedSections(allSections);
+      renderAll();
+      try {
+        const pm = await _fetchProtectedManifest(pw);
+        if(loadId !== _manifestLoadId || store.get(UNLOCK_PW_KEY, '') !== pw) return;
+        _mixedUnlocked = true;
+        _lib.courseSections = pm.sections; _lib.courseState = 'ready';
+      } catch(e) {
+        if(loadId !== _manifestLoadId) return;
+        _lib.courseState = 'error'; _lib.courseError = _describeLoadError(e);
+      }
+      _showLockControl(true);
+      renderAll();
     })
     .catch(err => {
-      showShippedBanner('Shipped quizzes unavailable — ' + (err && err.message ? err.message : 'fetch failed'));
-    });
+      if(loadId !== _manifestLoadId) return;
+      _lib.publicState = 'error'; _lib.publicError = _describeLoadError(err);
+      if(_lib.courseState === 'loading'){ _lib.courseState = 'error'; _lib.courseError = _lib.publicError; }
+      renderAll();
+    })
+    .finally(() => clearTimeout(timer));
 }
 
 /* Hash navigation keeps creation separate without a second app or parser. */
@@ -2075,7 +1884,31 @@ function showHomeView(){
 }
 window.addEventListener('hashchange', () => {
   showHomeView();
-  document.querySelector(location.hash === '#create' ? '#create-title' : '#lib-col h1').focus();
+  if(location.hash !== '#create') document.getElementById('create-success').hidden = true;
+  document.getElementById(location.hash === '#create' ? 'create-title' : 'lib-title').focus();
+});
+
+/* ── Keyboard: Esc closes menus; "/" filters the archive; g h / g a switch tabs. ── */
+let _gPending = 0;
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.querySelector('.qf-menu.is-open')){ e.preventDefault(); closeMenus(true); return; }
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+  if(document.querySelector('dialog[open]') || location.hash === '#create') return;
+  const unlocked = _lib.courseState !== 'locked';
+  if(e.key === '/' && unlocked){
+    e.preventDefault();
+    selectTab('archive');
+    const f = document.getElementById('archive-filter');
+    if(f) f.focus();
+    return;
+  }
+  if(e.key === 'g'){ _gPending = Date.now(); return; }
+  if(_gPending && Date.now() - _gPending < 1200 && unlocked){
+    if(e.key === 'h') selectTab('current', true);
+    else if(e.key === 'a') selectTab('archive', true);
+  }
+  _gPending = 0;
 });
 
 /* Coming back with the browser's Back button can restore this page from the
@@ -2092,54 +1925,6 @@ seedIfNeeded();
 applySettings();
 renderLibrary();
 loadManifest();
-
-/* ── One-time load-in sequence ──
-   .pre-anim is added here (before first paint) only when motion is allowed, and every
-   path below clears it, so nothing can stay hidden with reduced motion or a failed
-   anime.min.js load. */
-function loadInTargets(){
-  return [
-    document.getElementById('lib-col-head'),
-    document.getElementById('library-root'),
-    document.getElementById('create-rail')
-  ].filter(Boolean);
-}
-function clearPreAnim(){
-  document.querySelectorAll('.pre-anim').forEach(el => el.classList.remove('pre-anim'));
-}
-/* Last-resort guard: if an animation stalls (e.g. requestAnimationFrame is suspended in a
-   backgrounded tab), force anything still parked at opacity 0 back to visible. A finished
-   animation has already cleared its inline styles, so this is a no-op on the happy path. */
-function unstickAfter(els, ms){
-  setTimeout(() => {
-    els.forEach(el => {
-      if(el && el.style.opacity === '0'){
-        if(window.anime) anime.remove(el);
-        el.style.opacity = ''; el.style.transform = '';
-      }
-    });
-  }, ms);
-}
-try{
-  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
-    loadInTargets().forEach(el => el.classList.add('pre-anim'));
-    setTimeout(clearPreAnim, 700); /* safety net: never leave content hidden */
-  }
-}catch(e){ clearPreAnim(); }
-/* Runs at DOMContentLoaded (deferred anime.min.js has executed by then) rather
-   than window 'load', so the page never sits blank while other assets finish. */
-document.addEventListener('DOMContentLoaded', () => {
-  if(!motionOK()){ clearPreAnim(); return; }
-  const els = loadInTargets();
-  /* if the safety net already revealed the page (very slow load), don't re-hide it */
-  if(!els.some(el => el.classList.contains('pre-anim'))) return;
-  anime.set(els, { opacity: 0 });  /* inline value takes over before the class goes */
-  clearPreAnim();
-  anime({ targets: els, translateY: [8, 0], opacity: [0, 1], duration: 260,
-          delay: anime.stagger(30), easing: EASE_FN,   /* ≤ 320ms total */
-          complete: () => els.forEach(el => { el.style.opacity = ''; el.style.transform = ''; }) });
-  unstickAfter(els, 1200);
-});
 </script>
 </body>
 </html>

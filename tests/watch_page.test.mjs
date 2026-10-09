@@ -215,30 +215,33 @@ test('helpers copied from quiz.html stay identical', () => {
     assert.equal(grab(watchJs, start, end), grab(quizHtml, start, end), start);
 });
 
-test('library shows Watch-along only on unlocked lectures listed in the watch index', async () => {
+/* Watch-along is off the public UI (redesign 2026-10-09). watch.html and its files stay on
+   disk pending Thirth's decision, but the library must not link to it or fetch its index. */
+test('library never links to Watch-along or fetches the watch index, locked or unlocked', async () => {
   const html = read('index.html');
   const entry = id => ({ id, title: id, file: `quizzes/protected/${id}.r1.enc`, question_count: 1 });
+  const fetched = [];
   const dom = new JSDOM(html, { url: 'http://localhost:4620/', runScripts: 'dangerously',
     beforeParse(win) {
       win.matchMedia = () => ({ matches: false, addEventListener() {} });
       win.HTMLElement.prototype.scrollIntoView = function () {};
-      win.fetch = async () => ({ ok: true, json: async () => ({ schema_version: 1,
+      win.fetch = async url => { fetched.push(String(url)); return { ok: true, json: async () => ({ schema_version: 1,
         sections: [{ id: 'demo', name: 'Demo', quizzes: [{ id: 'demo', title: 'Demo', file: 'quizzes/Demo/demo.r1.json', question_count: 1 }] }],
-        protected: { manifest: 'quizzes/protected/manifest.enc', kdf: { salt: 'test-only' } } }) });
+        protected: { manifest: 'quizzes/protected/manifest.enc', kdf: { salt: 'test-only' } } }) }; };
     } });
   const win = dom.window, doc = win.document;
   await new Promise(r => setTimeout(r, 30));
-  assert.equal(doc.querySelectorAll('.take-watch').length, 0);
+  const watchLinks = () => [...doc.querySelectorAll('a[href]')].filter(a => /watch/i.test(a.getAttribute('href')) || /watch/i.test(a.textContent));
+  assert.deepEqual(watchLinks(), []);
   win.localStorage.setItem('qf_unlock_pw', 'synthetic-test-only');
   win._fetchProtectedManifest = async () => ({ sections: [{ id: 'week-01', name: 'Week 01',
-    quizzes: [entry('demo-w01-a'), entry('demo-w01-b')] }] });
-  win._fetchWatchIds = async () => new Set(['demo-w01-b', 'demo']);
+    quizzes: [entry('demo-w01-lec01'), entry('demo-w01-lec02')] }] });
   win.loadManifest();
   await new Promise(r => setTimeout(r, 30));
-  const links = [...doc.querySelectorAll('a.take-watch')];
-  assert.deepEqual(links.map(a => a.closest('[data-shipped-id]').dataset.shippedId), ['demo-w01-b']);
-  assert.equal(new URL(links[0].href).pathname + new URL(links[0].href).search, '/watch.html?id=demo-w01-b');
-  win.lockSite();
-  await new Promise(r => setTimeout(r, 30));
-  assert.equal(doc.querySelectorAll('.take-watch').length, 0);
+  assert.equal(doc.querySelectorAll('#panel-current .qf-lec').length, 2, 'unlocked rows rendered');
+  assert.deepEqual(watchLinks(), []);
+  assert.equal(typeof win._fetchWatchIds, 'undefined', 'watch index loader removed');
+  assert.ok(fetched.every(u => !/watch/.test(u)), 'watch/index.enc is never fetched: ' + fetched.join(', '));
+  assert.doesNotMatch(html, /watch\.html|watch\/index\.enc|Watch-along/, 'no watch-along reference left in index.html');
+  win.close();
 });

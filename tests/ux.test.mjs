@@ -44,9 +44,9 @@ test('shortcuts ignore modifier keys and stay quiet while a dialog is open', asy
     assert.equal(doc.getElementById('flag-btn').getAttribute('aria-pressed'), 'false');
     win.openEndModal();
     key(win, 'ArrowRight');
-    assert.match(doc.getElementById('ef-count').textContent, /^1 OF 4/);
+    assert.match(doc.getElementById('q-pos').textContent, /^1 \/ 4/);
     key(win, 'Escape');
-    assert.equal(doc.querySelector('.overlay.open'), null);
+    assert.equal(doc.querySelector('dialog[open]'), null);
     key(win, 'b');
     assert.match(doc.getElementById('currently-selected').textContent, /· B/);
   } finally { dom.window.close(); }
@@ -63,7 +63,7 @@ test('Previous/Next follow the active filter; View flagged with none flagged kee
     win.navigate(-1); win.navigate(-1);                          // back to question 1
     win.setFilter('flagged');
     win.navigate(1);
-    assert.match(doc.getElementById('ef-count').textContent, /^3 OF 4/);
+    assert.match(doc.getElementById('q-pos').textContent, /^3 \/ 4/);
     assert.equal(doc.querySelectorAll('#q-circles button.q-circle').length, 4, 'rail tiles are buttons');
   } finally { dom.window.close(); }
 });

@@ -122,7 +122,7 @@ for(const [name, opts, text] of [
 test('real encrypted mix renders media, scores/reviews, keeps provenance, and never saves attempts/plaintext', async t => {
   const {win, doc, requests} = page(t, {savedRecipe: {...recipe, quizIds: [...recipe.quizIds, recipe.quizIds[0]]}});
   await waitFor(() => doc.querySelectorAll('.choice-row').length === 3);
-  assert.match(doc.getElementById('ef-count').textContent, /OF 20/);
+  assert.match(doc.getElementById('q-pos').textContent, /\/ 20/);
   for(const b of banks) assert.equal(requests.filter(p => p === 'quizzes/protected/' + b.id + '.enc').length, 1);
   for(let i = 0; i < 20; i++) { win.chooseAnswer(0); if(i < 19) win.navigate(1); }
   win.submitExam();

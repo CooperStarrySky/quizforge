@@ -4,9 +4,9 @@ QuizForge turns your own lecture notes into a polished multiple-choice quiz. You
 
 ## How a student uses it
 
-1. Open the site and press **Copy prompt**.
+1. Open the site, go to **Create a quiz** and press **Copy prompt**.
 2. Paste the prompt into your favorite AI chatbot along with your lecture slides or notes. The chatbot writes the quiz and hands back a block of JSON.
-3. Paste that JSON into the **Paste your quiz** box and press **Load**. The quiz shows up in your library. Click **Take** to start, answer the questions, and submit to see your score.
+3. Back on **Create a quiz**, paste the chatbot's response into step 3 and press **Add to library**. Press **Start it now**, or find the quiz later under **My quizzes** and press **Start quiz**. Answer the questions and submit to see your score.
 
 Each quiz you load stays in your library, and every attempt adds to its score history so you can see how you're doing over time.
 
@@ -21,7 +21,7 @@ If you keep QuizForge in a subfolder of a larger repo, point people at that subf
 
 ## Where your data lives
 
-Everything runs in your browser. Quizzes and scores are saved to the browser's own storage (localStorage), and nothing is uploaded anywhere. That has two practical effects: your library is private to the device and browser you're using, and clearing your browser data will wipe it. Use the **Export** button on any quiz card to save a copy of its JSON that you can reload later or share.
+Everything runs in your browser. Quizzes and scores are saved to the browser's own storage (localStorage), and nothing is uploaded anywhere. That has two practical effects: your library is private to the device and browser you're using, and clearing your browser data will wipe it. Use **Export** in a quiz's **⋯** menu to save a copy of its JSON that you can reload later or share.
 
 ## Protected quizzes
 

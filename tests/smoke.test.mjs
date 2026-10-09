@@ -81,9 +81,9 @@ await (async () => {
   });
 
   test('?src= path: question count bar shows correct count', () => {
-    const ef = doc.getElementById('ef-count');
-    assert(ef, 'ef-count element must exist');
-    assertContains(ef.textContent, '10', 'ef-count should show 10 questions');
+    const ef = doc.getElementById('q-pos');
+    assert(ef, 'q-pos element must exist');
+    assertContains(ef.textContent, '10', 'q-pos should show 10 questions');
   });
 
   test('?src= path: selected-answer label does not show undefined', () => {
@@ -96,8 +96,8 @@ await (async () => {
   test('?src= path: selected[] array sized to 10 (not 0)', () => {
     // selected is a module-scope variable; we can check by counting choices and
     // ensuring the "no answer" label is for question 1 of 10 (proves length is right)
-    const ef = doc.getElementById('ef-count');
-    assertContains(ef.textContent, '1 OF 10', 'progress should read "1 OF 10"');
+    const ef = doc.getElementById('q-pos');
+    assertContains(ef.textContent, '1 / 10', 'position should read "1 / 10"');
   });
 
   test('normal mode keeps feedback hidden after selecting an answer', () => {
@@ -399,15 +399,16 @@ await (async () => {
   await new Promise(res => setTimeout(res, 200)); // fake crypto resolves in microtasks
   const doc = dom.window.document;
 
-  test('[index.html unlocked] protected section name appears', () => {
-    const root = doc.getElementById('shipped-root');
-    assert(root, 'shipped-root must exist');
-    assertContains(root.textContent, 'Smoke Week', 'protected section "Smoke Week" must appear when unlocked');
+  test('[index.html unlocked] course tabs appear and the quiz lands in an Other week', () => {
+    assert(!doc.getElementById('lib-tabs').hidden, 'tab strip must show when unlocked');
+    const cur = doc.getElementById('panel-current');
+    assertContains(cur.textContent, 'Other', 'an id without a week/lecture key goes to an Other week');
   });
 
   test('[index.html unlocked] protected quiz title appears', () => {
-    const root = doc.getElementById('shipped-root');
-    assertContains(root.textContent, 'Smoke Protected Quiz', 'protected quiz title must appear when unlocked');
+    const cur = doc.getElementById('panel-current');
+    assertContains(cur.textContent, 'Smoke Protected Quiz', 'protected quiz title must appear when unlocked');
+    assert(!doc.getElementById('shipped-root').textContent.includes('Smoke'), 'course quizzes never mix into Demo');
   });
 
   test('[index.html unlocked] lock button is visible', () => {
@@ -515,7 +516,8 @@ await (async () => {
   test('[quiz.html unlocked] quiz title appears in topbar', () => {
     const tt = doc3.getElementById('topbar-title');
     assert(tt, 'topbar-title must exist');
-    assertContains(tt.textContent, 'smoke test', 'topbar subtitle should contain "smoke test"');
+    assertContains(tt.textContent, 'Smoke Protected Quiz', 'top bar shows the quiz title');
+    assertContains(tt.title, 'smoke test', 'the full title attribute also carries the subtitle');
   });
 
   dom3.window.close();
